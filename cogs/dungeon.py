@@ -313,6 +313,7 @@ class DungeonCog(commands.Cog):
                 char.equipped_weapon, char.equipped_armor,
                 char.item_enhancements,
                 char.equipped_helmet, char.equipped_accessory,
+                char.custom_items,
             )
             base_atk, base_def = derive_player_stats(
                 char.class_type, char.stat_vitality,

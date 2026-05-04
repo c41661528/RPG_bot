@@ -11,29 +11,68 @@ if TYPE_CHECKING:
     from services.combat_service import CombatState
 
 
-class SkillSelect(discord.ui.Select):
-    """Dropdown that shows all 3 class skills; selecting one fires the turn."""
+# (action_suffix, label, emoji, row)
+_ITEM_DEFS = [
+    ("medkit",        "急救包",    "🩹", 2),
+    ("energy",        "能量電池",  "🔋", 2),
+    ("stimulant",     "興奮劑",    "💉", 2),
+    ("nano_repair",   "奈米修復劑","🧬", 2),
+    ("adrenaline",    "腎上腺素",  "💊", 3),
+    ("shield_chip",   "護盾晶片",  "🔰", 3),
+    ("corrosive_vial","腐蝕瓶",    "🧪", 3),
+    ("emp_grenade",   "EMP手雷",   "⚡", 3),
+]
 
+
+def _item_count(state: CombatState, action: str) -> int:
+    if action == "medkit":
+        return state.medkits
+    if action == "energy":
+        return state.energy_cells_in_combat
+    return state.consumables_in_combat.get(action, 0)
+
+
+class ItemButton(discord.ui.Button):
+    def __init__(
+        self,
+        cog: CombatCog,
+        character_id: int,
+        action: str,
+        label: str,
+        emoji: str,
+        count: int,
+        row: int,
+    ) -> None:
+        super().__init__(
+            label=f"{label} ×{count}",
+            emoji=emoji,
+            style=discord.ButtonStyle.secondary,
+            disabled=count <= 0,
+            row=row,
+        )
+        self.cog          = cog
+        self.character_id = character_id
+        self.action       = action
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        await self.cog.process_turn(interaction, self.character_id, f"item_{self.action}")
+
+
+class SkillSelect(discord.ui.Select):
     def __init__(self, cog: CombatCog, character_id: int, state: CombatState) -> None:
         self.cog          = cog
         self.character_id = character_id
 
         skills  = CLASS_SKILLS[state.char_class]
-        options: list[discord.SelectOption] = []
-
-        for skill in skills:
-            can_afford = state.energy >= skill["energy_cost"]
-            label = f"{skill['name']}  ({skill['energy_cost']} 能量)"
-            desc  = skill["desc"][:50]
-            options.append(
-                discord.SelectOption(
-                    label=label,
-                    value=skill["id"],
-                    emoji=skill["emoji"],
-                    description=desc,
-                    default=False,
-                )
+        options = [
+            discord.SelectOption(
+                label=f"{s['name']}  ({s['energy_cost']} 能量)",
+                value=s["id"],
+                emoji=s["emoji"],
+                description=s["desc"][:50],
             )
+            for s in skills
+        ]
 
         super().__init__(
             placeholder="💠 選擇技能...",
@@ -42,7 +81,6 @@ class SkillSelect(discord.ui.Select):
             max_values=1,
             row=1,
         )
-        # Disable the whole select only if all skills are too expensive
         self.disabled = not any(state.energy >= s["energy_cost"] for s in skills)
 
     async def callback(self, interaction: discord.Interaction) -> None:
@@ -55,21 +93,17 @@ class CombatView(discord.ui.View):
         self.cog          = cog
         self.character_id = character_id
 
-        # ── Skill select (row 1) ──────────────────────────────────
+        # ── Row 1: skill select ───────────────────────────────────
         self.add_item(SkillSelect(cog, character_id, state))
 
-        # Decorator buttons land in children[0..4]: attack, defend, flee, medkit, energy_cell
-        # SkillSelect is appended as children[5] by add_item above.
+        # ── Rows 2–3: item buttons (data-driven) ─────────────────
+        for action, label, emoji, row in _ITEM_DEFS:
+            count = _item_count(state, action)
+            self.add_item(ItemButton(cog, character_id, action, label, emoji, count, row))
+
+        # Disable defend when low energy
         can_defend = state.energy >= DEFEND_ENERGY_COST
-        self.children[1].disabled = not can_defend  # defend btn
-
-        mk = state.medkits
-        self.children[3].label    = f"急救包 ×{mk}"
-        self.children[3].disabled = mk <= 0
-
-        ec = state.energy_cells_in_combat
-        self.children[4].label    = f"能量電池 ×{ec}"
-        self.children[4].disabled = ec <= 0
+        self.children[1].disabled = not can_defend   # defend is children[1]
 
     # ── Row 0 ────────────────────────────────────────────────────
 
@@ -84,16 +118,6 @@ class CombatView(discord.ui.View):
     @discord.ui.button(label="逃跑", emoji="🏃", style=discord.ButtonStyle.secondary, row=0)
     async def flee(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         await self.cog.process_turn(interaction, self.character_id, "flee")
-
-    # ── Row 2 ────────────────────────────────────────────────────
-
-    @discord.ui.button(label="急救包 ×0", emoji="🩹", style=discord.ButtonStyle.secondary, row=2)
-    async def medkit(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        await self.cog.process_turn(interaction, self.character_id, "item_medkit")
-
-    @discord.ui.button(label="能量電池 ×0", emoji="🔋", style=discord.ButtonStyle.secondary, row=2)
-    async def energy_cell(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        await self.cog.process_turn(interaction, self.character_id, "item_energy")
 
     # ── Timeout ──────────────────────────────────────────────────
 

@@ -24,6 +24,11 @@ _MIGRATIONS = [
     "ALTER TABLE characters ADD COLUMN IF NOT EXISTS weekly_quests JSONB NOT NULL DEFAULT '{}'::jsonb",
     "ALTER TABLE characters ADD COLUMN IF NOT EXISTS achievements JSONB NOT NULL DEFAULT '{}'::jsonb",
     "ALTER TABLE characters ADD COLUMN IF NOT EXISTS dungeon_state JSONB NOT NULL DEFAULT '{}'::jsonb",
+    # Shop expansion
+    "ALTER TABLE characters ADD COLUMN IF NOT EXISTS consumables JSONB NOT NULL DEFAULT '{}'::jsonb",
+    # Gear shop
+    "ALTER TABLE characters ADD COLUMN IF NOT EXISTS custom_items JSONB NOT NULL DEFAULT '{}'::jsonb",
+    "ALTER TABLE characters ADD COLUMN IF NOT EXISTS shop_stock   JSONB NOT NULL DEFAULT '{}'::jsonb",
 ]
 
 

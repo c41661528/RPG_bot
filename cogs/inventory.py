@@ -29,24 +29,22 @@ _SLOT_ATTR = {
 
 def _fmt_item(item: dict) -> str:
     tier_e = RARITY_EMOJI.get(item.get("tier", 1), "⚪")
-    if "atk_bonus" in item:
-        bonus = f"+{item['atk_bonus']} ATK"
-    elif "def_bonus" in item and "hp_bonus" in item:
-        bonus = f"+{item['def_bonus']} DEF / +{item['hp_bonus']} HP"
-    elif "def_bonus" in item:
-        bonus = f"+{item['def_bonus']} DEF"
-    elif "energy_bonus" in item:
-        bonus = f"+{item['energy_bonus']} ⚡  +{int(item['crit_bonus']*100)}% 暴擊"
-    else:
-        bonus = "?"
+    parts: list[str] = []
+    if item.get("atk_bonus",    0):   parts.append(f"+{item['atk_bonus']} ATK")
+    if item.get("def_bonus",    0):   parts.append(f"+{item['def_bonus']} DEF")
+    if item.get("hp_bonus",     0):   parts.append(f"+{item['hp_bonus']} HP")
+    if item.get("energy_bonus", 0):   parts.append(f"+{item['energy_bonus']} ⚡")
+    if item.get("crit_bonus",   0.0): parts.append(f"+{int(item['crit_bonus']*100)}% 暴擊")
+    bonus = " / ".join(parts) if parts else "?"
     return f"{tier_e} {item['emoji']} **{item['name']}** `{bonus}`"
 
 
 def _inventory_embed(char: Character) -> discord.Embed:
-    w   = get_item(char.equipped_weapon)    if char.equipped_weapon    else None
-    a   = get_item(char.equipped_armor)     if char.equipped_armor     else None
-    h   = get_item(char.equipped_helmet)    if char.equipped_helmet    else None
-    acc = get_item(char.equipped_accessory) if char.equipped_accessory else None
+    ci  = char.custom_items or {}
+    w   = get_item(char.equipped_weapon,    ci) if char.equipped_weapon    else None
+    a   = get_item(char.equipped_armor,     ci) if char.equipped_armor     else None
+    h   = get_item(char.equipped_helmet,    ci) if char.equipped_helmet    else None
+    acc = get_item(char.equipped_accessory, ci) if char.equipped_accessory else None
 
     equipped_lines = [
         f"⚔️  武器：{_fmt_item(w)   if w   else '`空`'}",
@@ -77,7 +75,7 @@ def _inventory_embed(char: Character) -> discord.Embed:
         if item_id in seen:
             continue
         seen.add(item_id)
-        item = get_item(item_id)
+        item = get_item(item_id, ci)
         if not item:
             continue
         qty     = count[item_id]
@@ -100,6 +98,9 @@ def _inventory_embed(char: Character) -> discord.Embed:
 
 class EquipSelect(discord.ui.Select):
     def __init__(self, char: Character) -> None:
+        self.char_id     = char.id
+        self.custom_items = char.custom_items or {}
+        ci = self.custom_items
         inv: list[str] = list(char.inventory or [])
         seen: set[str] = set()
         options: list[discord.SelectOption] = []
@@ -108,7 +109,7 @@ class EquipSelect(discord.ui.Select):
             if item_id in seen or len(options) >= 25:
                 continue
             seen.add(item_id)
-            item = get_item(item_id)
+            item = get_item(item_id, ci)
             if not item:
                 continue
             slot   = item_slot(item_id)
@@ -147,8 +148,9 @@ class EquipSelect(discord.ui.Select):
         if self.values[0] == "__empty__":
             return await interaction.response.send_message("背包是空的。", ephemeral=True)
 
+        ci      = self.custom_items
         item_id = self.values[0]
-        item    = get_item(item_id)
+        item    = get_item(item_id, ci)
         if not item:
             return await interaction.response.send_message("找不到該物品。", ephemeral=True)
 
@@ -160,6 +162,7 @@ class EquipSelect(discord.ui.Select):
         async with AsyncSessionFactory() as session:
             result = await session.execute(select(Character).where(Character.id == self.char_id))
             char   = result.scalar_one()
+            ci     = char.custom_items or {}
 
             inv = list(char.inventory or [])
             if item_id not in inv:
@@ -175,7 +178,7 @@ class EquipSelect(discord.ui.Select):
             await session.commit()
             await session.refresh(char)
 
-        old_item = get_item(old) if old else None
+        old_item = get_item(old, ci) if old else None
         old_txt  = f"（替換 {old_item['emoji']} **{old_item['name']}**，已放回背包）" if old_item else ""
         await interaction.response.edit_message(
             embed=_inventory_embed(char),
@@ -240,6 +243,7 @@ class InventoryCog(commands.Cog):
             if not item_id:
                 return await ctx.respond(embed=error_embed(f"{slot}欄位是空的。"), ephemeral=True)
 
+            ci = char.custom_items or {}
             setattr(char, attr, None)
             inv = list(char.inventory or [])
             if len(inv) < _INVENTORY_LIMIT:
@@ -251,7 +255,7 @@ class InventoryCog(commands.Cog):
 
             await session.commit()
 
-        item = get_item(item_id)
+        item = get_item(item_id, ci)
         name = f"{item['emoji']} **{item['name']}**" if item else item_id
         await ctx.respond(embed=success_embed(f"卸下 {name}。{msg}"), ephemeral=True)
 
@@ -281,11 +285,12 @@ class InventoryCog(commands.Cog):
 # ── Sell helpers ─────────────────────────────────────────────────
 
 def _sell_embed(char: Character, selected_id: str = "", price: int = 0) -> discord.Embed:
+    ci  = char.custom_items or {}
     inv = list(char.inventory or [])
     enh = char.item_enhancements or {}
 
     if selected_id:
-        item = get_item(selected_id)
+        item = get_item(selected_id, ci)
         lv   = enhance_level(selected_id, enh)
         name = f"{item['emoji']} **{item['name']}**" if item else selected_id
         lv_txt = f" `+{lv}`" if lv > 0 else ""
@@ -302,11 +307,11 @@ def _sell_embed(char: Character, selected_id: str = "", price: int = 0) -> disco
             if item_id in seen:
                 continue
             seen.add(item_id)
-            item = get_item(item_id)
+            item = get_item(item_id, ci)
             if not item:
                 continue
             lv  = enhance_level(item_id, enh)
-            val = sell_value(item_id, lv)
+            val = sell_value(item_id, lv, ci)
             lv_txt  = f" `+{lv}`" if lv > 0 else ""
             tier_e  = RARITY_EMOJI.get(item.get("tier", 1), "⚪")
             lines.append(f"{tier_e} {item['emoji']} **{item['name']}**{lv_txt}　→ **{val:,}** 💰")
@@ -331,7 +336,9 @@ class SellSelectView(discord.ui.View):
 
 class _SellSelect(discord.ui.Select):
     def __init__(self, char: Character) -> None:
-        self.char_id = char.id
+        self.char_id     = char.id
+        self.custom_items = char.custom_items or {}
+        ci  = self.custom_items
         inv  = list(char.inventory or [])
         enh  = char.item_enhancements or {}
         seen: set[str] = set()
@@ -341,11 +348,11 @@ class _SellSelect(discord.ui.Select):
             if item_id in seen or len(options) >= 25:
                 continue
             seen.add(item_id)
-            item = get_item(item_id)
+            item = get_item(item_id, ci)
             if not item:
                 continue
             lv  = enhance_level(item_id, enh)
-            val = sell_value(item_id, lv)
+            val = sell_value(item_id, lv, ci)
             lv_txt = f" +{lv}" if lv > 0 else ""
             options.append(
                 discord.SelectOption(
@@ -379,9 +386,10 @@ class _SellSelect(discord.ui.Select):
             result = await session.execute(select(Character).where(Character.id == self.char_id))
             char   = result.scalar_one()
 
+        ci    = char.custom_items or {}
         enh   = char.item_enhancements or {}
         lv    = enhance_level(item_id, enh)
-        price = sell_value(item_id, lv)
+        price = sell_value(item_id, lv, ci)
 
         confirm_view = _ConfirmSellView(char, parent.discord_user_id, item_id, price)
         await interaction.response.edit_message(
@@ -419,16 +427,21 @@ class _ConfirmSellView(discord.ui.View):
             char.inventory = inv
             char.credits  += self.price
 
-            # Remove enhance data for sold item if no more copies
+            # Remove enhance and custom data for sold item if no more copies
             if self.item_id not in inv:
                 enh = dict(char.item_enhancements or {})
                 enh.pop(self.item_id, None)
                 char.item_enhancements = enh
 
+                if self.item_id.startswith("ci_"):
+                    ci = dict(char.custom_items or {})
+                    ci.pop(self.item_id, None)
+                    char.custom_items = ci
+
             await session.commit()
             await session.refresh(char)
 
-        item    = get_item(self.item_id)
+        item    = get_item(self.item_id, char.custom_items or {})
         name    = f"{item['emoji']} **{item['name']}**" if item else self.item_id
         for child in self.children:
             child.disabled = True

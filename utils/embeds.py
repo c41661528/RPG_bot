@@ -81,6 +81,7 @@ def character_profile_embed(character: Character) -> discord.Embed:
         character.equipped_weapon, character.equipped_armor,
         character.item_enhancements,
         character.equipped_helmet, character.equipped_accessory,
+        character.custom_items,
     )
     base_atk, base_def = derive_player_stats(
         character.class_type, character.stat_vitality,

@@ -7,14 +7,23 @@ from discord.ext import commands
 from sqlalchemy import select
 
 from config import (
+    ADRENALINE_ATK_MULT,
+    ADRENALINE_DURATION,
     CLASS_SKILLS,
     COMBO_BONUS,
     COMBO_MAX,
+    CORROSIVE_VIAL_PCT,
+    CORROSIVE_VIAL_TURNS,
     DEFEND_ENERGY_COST,
+    EMP_GRENADE_STUN,
     ENERGY_CELL_RESTORE,
     MAX_LEVEL,
     MEDKIT_HEAL_PCT,
+    NANO_REPAIR_PCT,
+    NANO_REPAIR_TURNS,
     STAT_POINTS_PER_LEVEL,
+    STIMULANT_ENERGY,
+    STIMULANT_HEAL_PCT,
     exp_for_next_level,
 )
 from database.session import AsyncSessionFactory
@@ -86,6 +95,7 @@ class CombatCog(commands.Cog):
             char.equipped_weapon, char.equipped_armor,
             char.item_enhancements,
             char.equipped_helmet, char.equipped_accessory,
+            char.custom_items,
         )
         base_atk, base_def = derive_player_stats(
             char.class_type, char.stat_vitality, char.stat_reflex, char.stat_tech, char.level
@@ -108,6 +118,7 @@ class CombatCog(commands.Cog):
             enemy_hp=enemy["hp"],
             medkits=char.medkits,
             energy_cells_in_combat=char.energy_cells,
+            consumables_in_combat=dict(char.consumables or {}),
         )
         self.active_combats[char.id] = state
 
@@ -254,6 +265,91 @@ class CombatCog(commands.Cog):
                 f"（剩餘 {state.energy_cells_in_combat} 個）"
             )
 
+        elif action == "item_stimulant":
+            count = state.consumables_in_combat.get("stimulant", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有興奮劑！", ephemeral=True)
+            heal    = max(1, int(state.hp_max * STIMULANT_HEAL_PCT))
+            restore = min(STIMULANT_ENERGY, state.energy_max - state.energy)
+            state.hp     = min(state.hp_max, state.hp + heal)
+            state.energy = min(state.energy_max, state.energy + STIMULANT_ENERGY)
+            state.consumables_in_combat["stimulant"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"💉 使用興奮劑，恢復 **{heal}** HP + **{restore}** 能量！"
+                f"（剩餘 {state.consumables_in_combat['stimulant']} 個）"
+            )
+            state.combo = 0
+
+        elif action == "item_nano_repair":
+            count = state.consumables_in_combat.get("nano_repair", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有奈米修復劑！", ephemeral=True)
+            add_status(state.player_statuses, "regen", NANO_REPAIR_TURNS, NANO_REPAIR_PCT)
+            state.consumables_in_combat["nano_repair"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"🧬 啟動奈米修復劑！每回合恢復 {int(NANO_REPAIR_PCT * 100)}% HP，"
+                f"持續 {NANO_REPAIR_TURNS} 回合！"
+                f"（剩餘 {state.consumables_in_combat['nano_repair']} 個）"
+            )
+            state.combo = 0
+
+        elif action == "item_adrenaline":
+            count = state.consumables_in_combat.get("adrenaline", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有腎上腺素！", ephemeral=True)
+            add_status(state.player_statuses, "atk_buff", ADRENALINE_DURATION, ADRENALINE_ATK_MULT)
+            state.consumables_in_combat["adrenaline"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"💊 注射腎上腺素！ATK +{int((ADRENALINE_ATK_MULT - 1) * 100)}%，"
+                f"持續 {ADRENALINE_DURATION} 回合！"
+                f"（剩餘 {state.consumables_in_combat['adrenaline']} 個）"
+            )
+            state.combo = 0
+
+        elif action == "item_shield_chip":
+            count = state.consumables_in_combat.get("shield_chip", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有護盾晶片！", ephemeral=True)
+            add_status(state.player_statuses, "dodge_next", 1, 0.0)
+            state.consumables_in_combat["shield_chip"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"🔰 啟動護盾晶片，將抵擋下一次敵人攻擊！"
+                f"（剩餘 {state.consumables_in_combat['shield_chip']} 個）"
+            )
+            state.combo = 0
+
+        elif action == "item_corrosive_vial":
+            count = state.consumables_in_combat.get("corrosive_vial", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有腐蝕瓶！", ephemeral=True)
+            add_status(state.enemy_statuses, "poison", CORROSIVE_VIAL_TURNS, CORROSIVE_VIAL_PCT)
+            state.consumables_in_combat["corrosive_vial"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"🧪 投擲腐蝕瓶！{state.enemy['emoji']} **{state.enemy['name']}** 中毒 "
+                f"{CORROSIVE_VIAL_TURNS} 回合！"
+                f"（剩餘 {state.consumables_in_combat['corrosive_vial']} 個）"
+            )
+            state.combo = 0
+
+        elif action == "item_emp_grenade":
+            count = state.consumables_in_combat.get("emp_grenade", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有電磁脈衝彈！", ephemeral=True)
+            add_status(state.enemy_statuses, "stun", EMP_GRENADE_STUN, 0.0)
+            state.consumables_in_combat["emp_grenade"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"⚡ 引爆電磁脈衝彈！{state.enemy['emoji']} **{state.enemy['name']}** "
+                f"被癱瘓 {EMP_GRENADE_STUN} 回合！"
+                f"（剩餘 {state.consumables_in_combat['emp_grenade']} 個）"
+            )
+            state.combo = 0
+
         # ── Enemy counter-attack (check player buffs BEFORE ticking) ─
         if enemy_immobilised:
             logs.append(
@@ -349,6 +445,7 @@ class CombatCog(commands.Cog):
             char.energy_current = state.energy
             char.medkits        = state.medkits
             char.energy_cells   = state.energy_cells_in_combat
+            char.consumables    = state.consumables_in_combat
 
             # ── Quest / weekly updates (batch) ────────────────────
             def _q(t: str, n: int) -> None:

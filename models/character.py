@@ -34,6 +34,11 @@ class Character(Base):
     credits: Mapped[int] = mapped_column(BigInteger, default=0)
     energy_cells: Mapped[int] = mapped_column(Integer, default=0)
     medkits: Mapped[int] = mapped_column(Integer, default=0)
+    consumables: Mapped[dict] = mapped_column(JSONB, default=dict)
+    # custom_items = {item_id: stats_dict} for randomly generated shop equipment
+    custom_items: Mapped[dict] = mapped_column(JSONB, default=dict)
+    # shop_stock = {"gen_level": N, "items": [{"item_id": str, "price": int}]}
+    shop_stock: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # ── Equipment ────────────────────────────────────────────────
     # inventory = list of unequipped item_id strings, max 20

@@ -55,6 +55,7 @@ class CombatState:
     enemy_hp:               int              = 0
     medkits:                int              = 0
     energy_cells_in_combat: int              = 0
+    consumables_in_combat:  dict             = field(default_factory=dict)
     turn:                   int              = 0
     last_log:               list[str]        = field(default_factory=list)
     is_over:                bool             = False
@@ -106,6 +107,10 @@ def tick_statuses(statuses: list[dict], hp: int, hp_max: int) -> tuple[int, list
             dmg = max(1, int(hp_max * s["value"]))
             hp  = max(0, hp - dmg)
             logs.append(f"⚡ **感電** 造成 **{dmg}** 點傷害！（剩餘 {s['turns_left']-1} 回）")
+        elif s["type"] == "regen":
+            heal = max(1, int(hp_max * s["value"]))
+            hp   = min(hp_max, hp + heal)
+            logs.append(f"🧬 **奈米修復** 恢復 **{heal}** HP！（剩餘 {s['turns_left']-1} 回）")
         s["turns_left"] -= 1
         if s["turns_left"] <= 0:
             expired.append(s)
@@ -123,6 +128,6 @@ def is_immobilised(statuses: list[dict]) -> bool:
 
 def fmt_statuses(statuses: list[dict]) -> str:
     """Format status list for display, e.g. '🦠×3  ⚡×2'."""
-    _ICONS = {"poison": "🦠", "burn": "🔥", "shock": "⚡", "stun": "💫", "stun_hack": "💫", "atk_buff": "💪", "dodge_next": "💨"}
+    _ICONS = {"poison": "🦠", "burn": "🔥", "shock": "⚡", "stun": "💫", "stun_hack": "💫", "atk_buff": "💪", "dodge_next": "💨", "regen": "🧬", "defending": "🛡️"}
     parts = [f"{_ICONS.get(s['type'], '?')}×{s['turns_left']}" for s in statuses]
     return "  ".join(parts) if parts else ""

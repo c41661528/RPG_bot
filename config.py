@@ -120,10 +120,83 @@ REBIRTH_REQUIRED_LEVEL   = 50   # must be max level
 REBIRTH_STAT_BONUS       = 2    # +2 to ALL base stats per rebirth
 
 # ── Shop prices ─────────────────────────────────────────────────
-MEDKIT_COST        = 150   # credits
-ENERGY_CELL_COST   = 100   # credits
-MEDKIT_HEAL_PCT    = 0.35  # heals 35 % of max HP
-ENERGY_CELL_RESTORE = 40   # restores 40 energy
+MEDKIT_COST          = 150   # credits
+ENERGY_CELL_COST     = 100   # credits
+MEDKIT_HEAL_PCT      = 0.35  # heals 35 % of max HP
+ENERGY_CELL_RESTORE  = 40    # restores 40 energy
+
+SHIELD_CHIP_COST     = 300
+ADRENALINE_COST      = 200
+STIMULANT_COST       = 180
+CORROSIVE_VIAL_COST  = 220
+EMP_GRENADE_COST     = 350
+NANO_REPAIR_COST     = 280
+
+# ── New consumable effects ──────────────────────────────────────
+ADRENALINE_ATK_MULT  = 1.3    # +30 % ATK
+ADRENALINE_DURATION  = 3      # turns
+STIMULANT_HEAL_PCT   = 0.25   # 25 % HP
+STIMULANT_ENERGY     = 25     # energy restored
+CORROSIVE_VIAL_PCT   = 0.07   # 7 % HP per turn
+CORROSIVE_VIAL_TURNS = 3
+EMP_GRENADE_STUN     = 1      # turns
+NANO_REPAIR_PCT      = 0.12   # 12 % HP per turn
+NANO_REPAIR_TURNS    = 3
+
+# ── Unified shop catalogue ─────────────────────────────────────
+SHOP_ITEMS: list[dict] = [
+    {
+        "id": "medkit", "name": "急救包", "emoji": "🩹",
+        "cost": MEDKIT_COST, "category": "recovery",
+        "desc": f"恢復 {int(MEDKIT_HEAL_PCT * 100)}% 最大 HP",
+    },
+    {
+        "id": "energy_cell", "name": "能量電池", "emoji": "🔋",
+        "cost": ENERGY_CELL_COST, "category": "recovery",
+        "desc": f"恢復 {ENERGY_CELL_RESTORE} 能量",
+    },
+    {
+        "id": "stimulant", "name": "興奮劑", "emoji": "💉",
+        "cost": STIMULANT_COST, "category": "recovery",
+        "desc": f"恢復 {int(STIMULANT_HEAL_PCT * 100)}% HP + {STIMULANT_ENERGY} 能量",
+    },
+    {
+        "id": "nano_repair", "name": "奈米修復劑", "emoji": "🧬",
+        "cost": NANO_REPAIR_COST, "category": "recovery",
+        "desc": f"每回合恢復 {int(NANO_REPAIR_PCT * 100)}% HP，持續 {NANO_REPAIR_TURNS} 回合",
+    },
+    {
+        "id": "adrenaline", "name": "腎上腺素", "emoji": "💊",
+        "cost": ADRENALINE_COST, "category": "combat",
+        "desc": f"ATK +{int((ADRENALINE_ATK_MULT - 1) * 100)}%，持續 {ADRENALINE_DURATION} 回合",
+    },
+    {
+        "id": "shield_chip", "name": "護盾晶片", "emoji": "🔰",
+        "cost": SHIELD_CHIP_COST, "category": "combat",
+        "desc": "抵擋下一次敵人攻擊",
+    },
+    {
+        "id": "corrosive_vial", "name": "腐蝕瓶", "emoji": "🧪",
+        "cost": CORROSIVE_VIAL_COST, "category": "combat",
+        "desc": f"敵人中毒 {CORROSIVE_VIAL_TURNS} 回合，每回合 -{int(CORROSIVE_VIAL_PCT * 100)}% HP",
+    },
+    {
+        "id": "emp_grenade", "name": "電磁脈衝彈", "emoji": "⚡",
+        "cost": EMP_GRENADE_COST, "category": "combat",
+        "desc": f"癱瘓敵人 {EMP_GRENADE_STUN} 回合",
+    },
+]
+
+SHOP_ITEMS_BY_NAME: dict[str, dict] = {item["name"]: item for item in SHOP_ITEMS}
+
+# ── Material shop prices ────────────────────────────────────────
+MATERIAL_PRICES: dict[str, int] = {
+    "scrap_metal":    350,
+    "circuit_board":  900,
+    "energy_core":  2_200,
+    "nano_fiber":   5_500,
+    "quantum_chip": 13_000,
+}
 
 CLASS_DISPLAY: dict[str, dict] = {
     "street_samurai": {

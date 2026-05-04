@@ -33,8 +33,12 @@ _TIER_BY_LEVEL: dict[int, list[int]] = {
 }
 
 
-def get_item(item_id: str) -> dict | None:
-    return _ALL.get(item_id)
+def get_item(item_id: str, custom_items: dict | None = None) -> dict | None:
+    if item_id in _ALL:
+        return _ALL[item_id]
+    if custom_items and item_id in custom_items:
+        return custom_items[item_id]
+    return None
 
 
 def get_material(mat_id: str) -> dict | None:
@@ -46,19 +50,19 @@ def all_materials() -> list[dict]:
 
 
 def is_weapon(item_id: str) -> bool:
-    return item_id in _WEAPONS
+    return item_id in _WEAPONS or item_id.startswith("ci_w_")
 
 
 def is_armor(item_id: str) -> bool:
-    return item_id in _ARMOR
+    return item_id in _ARMOR or item_id.startswith("ci_a_")
 
 
 def is_helmet(item_id: str) -> bool:
-    return item_id in _HELMETS
+    return item_id in _HELMETS or item_id.startswith("ci_h_")
 
 
 def is_accessory(item_id: str) -> bool:
-    return item_id in _ACCESSORIES
+    return item_id in _ACCESSORIES or item_id.startswith("ci_ac_")
 
 
 def item_slot(item_id: str) -> str:
@@ -76,33 +80,44 @@ def equipped_bonuses(
     item_enhancements:  dict | None = None,
     equipped_helmet:    str | None  = None,
     equipped_accessory: str | None  = None,
+    custom_items:       dict | None = None,
 ) -> tuple[int, int, int, int, float]:
     """Returns (atk_bonus, def_bonus, hp_bonus, energy_bonus, crit_bonus)."""
     from config import ENHANCE_BONUS_PER_LV
     enh = item_enhancements or {}
+    ci  = custom_items or {}
+
+    def _get(iid: str) -> dict | None:
+        return _ALL.get(iid) or ci.get(iid)
 
     atk = 0
-    if equipped_weapon and equipped_weapon in _WEAPONS:
-        atk = (_WEAPONS[equipped_weapon]["atk_bonus"]
-               + enh.get(equipped_weapon, 0) * ENHANCE_BONUS_PER_LV)
+    if equipped_weapon:
+        w = _get(equipped_weapon)
+        if w:
+            atk = (w.get("atk_bonus", 0)
+                   + enh.get(equipped_weapon, 0) * ENHANCE_BONUS_PER_LV)
 
     def_ = 0
-    if equipped_armor and equipped_armor in _ARMOR:
-        def_ = (_ARMOR[equipped_armor]["def_bonus"]
-                + enh.get(equipped_armor, 0) * ENHANCE_BONUS_PER_LV)
+    if equipped_armor:
+        a = _get(equipped_armor)
+        if a:
+            def_ = (a.get("def_bonus", 0)
+                    + enh.get(equipped_armor, 0) * ENHANCE_BONUS_PER_LV)
 
     hp = 0
-    if equipped_helmet and equipped_helmet in _HELMETS:
-        h    = _HELMETS[equipped_helmet]
-        def_ += h["def_bonus"] + enh.get(equipped_helmet, 0) * ENHANCE_BONUS_PER_LV
-        hp    = h["hp_bonus"]
+    if equipped_helmet:
+        h = _get(equipped_helmet)
+        if h:
+            def_ += h.get("def_bonus", 0) + enh.get(equipped_helmet, 0) * ENHANCE_BONUS_PER_LV
+            hp    = h.get("hp_bonus", 0)
 
     energy = 0
     crit   = 0.0
-    if equipped_accessory and equipped_accessory in _ACCESSORIES:
-        a      = _ACCESSORIES[equipped_accessory]
-        energy = a["energy_bonus"]
-        crit   = a["crit_bonus"]
+    if equipped_accessory:
+        ac = _get(equipped_accessory)
+        if ac:
+            energy = ac.get("energy_bonus", 0)
+            crit   = ac.get("crit_bonus", 0.0)
 
     return atk, def_, hp, energy, crit
 
@@ -159,13 +174,12 @@ def try_drop_material(enemy_level: int) -> dict | None:
 _TIER_SELL_BASE: dict[int, int] = {1: 60, 2: 200, 3: 550, 4: 1_400}
 
 
-def sell_value(item_id: str, enh_level: int = 0) -> int:
+def sell_value(item_id: str, enh_level: int = 0, custom_items: dict | None = None) -> int:
     """Return how many credits the player gets for selling item_id at enh_level."""
-    item = get_item(item_id)
+    item = get_item(item_id, custom_items)
     if not item:
         return 0
     base = _TIER_SELL_BASE.get(item.get("tier", 1), 60)
-    # Each enhance level adds 30 % of base value
     return int(base * (1.0 + enh_level * 0.30))
 
 

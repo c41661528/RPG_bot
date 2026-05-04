@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import select
 
-from config import ENERGY_CELL_COST, MEDKIT_COST
+from config import SHOP_ITEMS, SHOP_ITEMS_BY_NAME
 from database.session import AsyncSessionFactory
 from models.character import Character
 from models.player import Player
@@ -10,28 +10,40 @@ from services.quest_service import update_quest_progress
 from utils.embeds import C_INFO, error_embed, success_embed
 
 
+def _item_stock(char: Character, item_id: str) -> int:
+    if item_id == "medkit":
+        return char.medkits
+    if item_id == "energy_cell":
+        return char.energy_cells
+    return (char.consumables or {}).get(item_id, 0)
+
+
 def _shop_embed(char: Character) -> discord.Embed:
     embed = discord.Embed(
         title="🏪  黑市補給站",
         description=(
             "在廢墟邊緣的昏暗小隔間，一個蒙面商人向你招手。\n\n"
-            f"💰 **你的信用點：** {char.credits:,}\n"
-            f"🩹 **急救包：** {char.medkits} 個\n"
-            f"🔋 **能量電池：** {char.energy_cells} 個"
+            f"💰 **你的信用點：** {char.credits:,}"
         ),
         color=C_INFO,
     )
-    embed.add_field(
-        name=f"🩹 急救包　{MEDKIT_COST:,} 💰",
-        value="戰鬥中使用，恢復 **35%** 最大 HP。",
-        inline=True,
-    )
-    embed.add_field(
-        name=f"🔋 能量電池　{ENERGY_CELL_COST:,} 💰",
-        value="戰鬥中使用，恢復 **40** 能量。",
-        inline=True,
-    )
-    embed.set_footer(text="使用 /buy 購買道具")
+
+    recovery = [i for i in SHOP_ITEMS if i["category"] == "recovery"]
+    combat   = [i for i in SHOP_ITEMS if i["category"] == "combat"]
+
+    def _fmt(items: list[dict]) -> str:
+        lines = []
+        for item in items:
+            stock = _item_stock(char, item["id"])
+            lines.append(
+                f"{item['emoji']} **{item['name']}**　{item['cost']:,} 💰　`×{stock}`\n"
+                f"　{item['desc']}"
+            )
+        return "\n".join(lines)
+
+    embed.add_field(name="🩹 回復補給", value=_fmt(recovery), inline=False)
+    embed.add_field(name="⚔️ 戰鬥用品", value=_fmt(combat),   inline=False)
+    embed.set_footer(text="使用 /buy <道具名稱> [數量] 購買道具，最多一次 10 個")
     return embed
 
 
@@ -61,7 +73,7 @@ class ShopCog(commands.Cog):
         item: discord.Option(
             str,
             description="道具名稱",
-            choices=["急救包", "能量電池"],
+            choices=[i["name"] for i in SHOP_ITEMS],
         ),
         quantity: discord.Option(
             int,
@@ -71,16 +83,8 @@ class ShopCog(commands.Cog):
             default=1,
         ),
     ) -> None:
-        if item == "急救包":
-            cost_each = MEDKIT_COST
-            attr      = "medkits"
-            emoji     = "🩹"
-        else:
-            cost_each = ENERGY_CELL_COST
-            attr      = "energy_cells"
-            emoji     = "🔋"
-
-        total_cost = cost_each * quantity
+        item_info  = SHOP_ITEMS_BY_NAME[item]
+        total_cost = item_info["cost"] * quantity
 
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -105,16 +109,28 @@ class ShopCog(commands.Cog):
                 )
 
             char.credits -= total_cost
-            setattr(char, attr, getattr(char, attr) + quantity)
-            new_count = getattr(char, attr)
+            item_id = item_info["id"]
+
+            if item_id == "medkit":
+                char.medkits += quantity
+                new_count = char.medkits
+            elif item_id == "energy_cell":
+                char.energy_cells += quantity
+                new_count = char.energy_cells
+            else:
+                cons = dict(char.consumables or {})
+                cons[item_id] = cons.get(item_id, 0) + quantity
+                char.consumables = cons
+                new_count = cons[item_id]
+
             update_quest_progress(char, "buy_items", quantity)
             await session.commit()
 
-        remaining = char.credits  # already decremented in the session
         await ctx.respond(
             embed=success_embed(
-                f"購買了 **{quantity}** 個 {emoji} **{item}**，花費 **{total_cost:,}** 💰\n"
-                f"現有存量：**{new_count}** 個　│　剩餘信用點：**{remaining:,}**"
+                f"購買了 **{quantity}** 個 {item_info['emoji']} **{item}**，"
+                f"花費 **{total_cost:,}** 💰\n"
+                f"現有存量：**{new_count}** 個　│　剩餘信用點：**{char.credits:,}**"
             ),
             ephemeral=True,
         )
