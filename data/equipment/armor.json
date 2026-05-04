@@ -1,0 +1,10 @@
+[
+  {"id": "torn_jacket",        "name": "破舊皮夾克",  "emoji": "🧥", "tier": 1, "def_bonus":  3, "desc": "幾層縫補的皮革，聊勝於無。"},
+  {"id": "scrap_plate",        "name": "廢料護板",    "emoji": "🛡️", "tier": 1, "def_bonus":  5, "desc": "廢棄車門焊接的臨時護甲，笨重但有效。"},
+  {"id": "reinforced_vest",    "name": "加固防彈衣",  "emoji": "🦺", "tier": 2, "def_bonus":  9, "desc": "軍方淘汰的防彈衣，加了幾層鋼板。"},
+  {"id": "light_cyber_armor",  "name": "輕型義甲",    "emoji": "🤖", "tier": 2, "def_bonus": 12, "desc": "嵌入皮下的輕型鈦合金護板，靈活度不受影響。"},
+  {"id": "corp_security_suit", "name": "企業安全套裝","emoji": "🕴️", "tier": 3, "def_bonus": 17, "desc": "企業私人衛隊的標準裝備，防護性能優異。"},
+  {"id": "reactive_armor",     "name": "反應裝甲",    "emoji": "⚔️", "tier": 3, "def_bonus": 14, "desc": "內建感測器，能在被攻擊瞬間自動強化防禦。"},
+  {"id": "military_exo",       "name": "軍用外骨骼",  "emoji": "🦾", "tier": 4, "def_bonus": 23, "desc": "軍事等級的動力裝甲框架，幾乎刀槍不入。"},
+  {"id": "quantum_shield",     "name": "量子護盾模組","emoji": "✨", "tier": 4, "def_bonus": 19, "desc": "量子態護盾，不確定性使攻擊難以命中要害。"}
+]

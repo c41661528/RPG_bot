@@ -1,0 +1,42 @@
+[
+  {
+    "id":             "scrap_metal",
+    "name":           "廢棄金屬",
+    "emoji":          "🔩",
+    "enhance_bonus":  0.05,
+    "desc":           "各種廢棄的金屬碎片，可作為基礎強化材料。",
+    "drop_weight":    40
+  },
+  {
+    "id":             "circuit_board",
+    "name":           "電路板",
+    "emoji":          "🖥️",
+    "enhance_bonus":  0.10,
+    "desc":           "從廢棄設備拆下的電路板，用於精密強化。",
+    "drop_weight":    30
+  },
+  {
+    "id":             "energy_core",
+    "name":           "能量核心",
+    "emoji":          "🔋",
+    "enhance_bonus":  0.15,
+    "desc":           "濃縮的能量晶體，提供穩定的強化能量。",
+    "drop_weight":    18
+  },
+  {
+    "id":             "nano_fiber",
+    "name":           "奈米纖維",
+    "emoji":          "🧵",
+    "enhance_bonus":  0.20,
+    "desc":           "軍事級奈米纖維，極大提升強化成功率。",
+    "drop_weight":    9
+  },
+  {
+    "id":             "quantum_chip",
+    "name":           "量子晶片",
+    "emoji":          "💎",
+    "enhance_bonus":  0.25,
+    "desc":           "最先進的量子計算晶片，強化時幾乎無損耗。",
+    "drop_weight":    3
+  }
+]

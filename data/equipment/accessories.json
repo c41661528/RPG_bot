@@ -1,0 +1,38 @@
+[
+  {
+    "id":           "worn_chip",
+    "name":         "舊型晶片",
+    "emoji":        "💾",
+    "tier":         1,
+    "energy_bonus": 15,
+    "crit_bonus":   0.02,
+    "desc":         "過時的戰鬥輔助晶片，仍有一定效果。"
+  },
+  {
+    "id":           "reflex_booster",
+    "name":         "反應增益器",
+    "emoji":        "⚡",
+    "tier":         2,
+    "energy_bonus": 25,
+    "crit_bonus":   0.04,
+    "desc":         "神經反應加速模組，提升戰鬥反應速度。"
+  },
+  {
+    "id":           "combat_ai_chip",
+    "name":         "戰鬥AI晶片",
+    "emoji":        "🤖",
+    "tier":         3,
+    "energy_bonus": 40,
+    "crit_bonus":   0.07,
+    "desc":         "整合微型戰鬥AI的強化晶片，自動優化攻擊時機。"
+  },
+  {
+    "id":           "quantum_synapse",
+    "name":         "量子突觸",
+    "emoji":        "🔮",
+    "tier":         4,
+    "energy_bonus": 60,
+    "crit_bonus":   0.10,
+    "desc":         "量子計算突觸接口，人機合一的極致境界。"
+  }
+]

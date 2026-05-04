@@ -1,0 +1,58 @@
+[
+  {
+    "id": "east_ruins",
+    "name": "廢墟東區",
+    "emoji": "🏚️",
+    "required_level": 1,
+    "desc": "被遺棄的城市東部，輻射污染的廢墟中仍有零星物資。",
+    "events": [
+      {"type": "treasure", "weight": 25, "title": "廢棄補給箱",   "text": "你在廢棄建築的角落翻到一個生鏽的金屬箱。",             "credits_min": 15,  "credits_max": 60},
+      {"type": "trap",     "weight": 20, "title": "陷阱！",        "text": "你踩進了廢土幫派設置的碎玻璃陷阱，腳踝受傷。",         "hp_loss_pct": 0.12},
+      {"type": "heal",     "weight": 20, "title": "廢棄急救站",   "text": "你在一間廢診所找到了還沒過期的醫療物資。",             "hp_restore_pct": 0.20},
+      {"type": "item",     "weight": 15, "title": "零件堆",        "text": "一堆廢棄零件中藏著些有用的東西。",                     "tier": 1},
+      {"type": "nothing",  "weight": 20, "title": "空手而歸",      "text": "這一帶已經被翻遍了，什麼都沒找到。"}
+    ]
+  },
+  {
+    "id": "industrial_ruins",
+    "name": "工業廢墟",
+    "emoji": "🏭",
+    "required_level": 3,
+    "desc": "廢棄的重工業區，機器人殘骸與有毒廢液遍佈，危機四伏。",
+    "events": [
+      {"type": "treasure", "weight": 25, "title": "工廠保險箱",   "text": "你找到半埋在廢土裡的舊式保險箱，勉強撬開了。",         "credits_min": 60,  "credits_max": 180},
+      {"type": "trap",     "weight": 20, "title": "毒氣洩漏！",    "text": "管道破裂，有毒氣體噴出，你趕緊撤退但還是吸入了一些。", "hp_loss_pct": 0.18},
+      {"type": "heal",     "weight": 15, "title": "備用電源室",   "text": "你找到一台還能運作的小型發電機，給義體補充了電力。",   "hp_restore_pct": 0.25},
+      {"type": "item",     "weight": 20, "title": "武器儲藏室",   "text": "你發現了工廠安全室的武器儲藏室，鎖頭已經生鏽脫落。",   "tier": 2},
+      {"type": "nothing",  "weight": 20, "title": "機器人殘骸",   "text": "一具報廢機器人，零件都已無法使用。"}
+    ]
+  },
+  {
+    "id": "corp_ruins",
+    "name": "企業廢棄總部",
+    "emoji": "🏢",
+    "required_level": 5,
+    "desc": "曾經的跨國企業大樓，內部充斥著高科技陷阱與被遺忘的機密。",
+    "events": [
+      {"type": "treasure", "weight": 20, "title": "企業金庫",     "text": "你破解了企業殘留的電子金庫，信用點自動轉入帳戶。",     "credits_min": 150, "credits_max": 400},
+      {"type": "trap",     "weight": 20, "title": "自動防衛系統！","text": "啟動了殘存的防衛雷射，你翻滾逃脫但還是受了傷。",       "hp_loss_pct": 0.22},
+      {"type": "heal",     "weight": 15, "title": "研究室醫療艙", "text": "你鑽進企業研究室的醫療艙，系統自動修復了你的傷口。",   "hp_restore_pct": 0.35},
+      {"type": "item",     "weight": 25, "title": "武器實驗室",   "text": "企業武器研發部門，原型武器整整齊齊排列在架上。",       "tier": 3},
+      {"type": "nothing",  "weight": 20, "title": "清空的辦公室", "text": "有人比你更早一步清空了這裡，只剩被翻亂的文件。"}
+    ]
+  },
+  {
+    "id": "deep_underground",
+    "name": "深層地下道",
+    "emoji": "🌑",
+    "required_level": 8,
+    "desc": "城市地下最深處，傳說中廢土最強的傭兵和最珍貴的物資都藏在這裡。",
+    "events": [
+      {"type": "treasure", "weight": 20, "title": "黑市倉庫",     "text": "你偶然發現了黑市商人的秘密倉庫，他顯然走得很倉促。",   "credits_min": 300, "credits_max": 800},
+      {"type": "trap",     "weight": 20, "title": "神經地雷！",    "text": "神經地雷爆炸，電磁脈衝直接衝擊你的義體系統。",         "hp_loss_pct": 0.28},
+      {"type": "heal",     "weight": 15, "title": "軍用醫療站",   "text": "你找到了軍方遺留的野戰醫療站，高階設備迅速恢復傷勢。", "hp_restore_pct": 0.45},
+      {"type": "item",     "weight": 25, "title": "軍火庫",        "text": "大型軍火庫，軍用級別的裝備整齊排列。",                 "tier": 4},
+      {"type": "nothing",  "weight": 20, "title": "黑暗中的腳步聲","text": "你聽見遠處有腳步聲，謹慎起見選擇撤退，什麼也沒找到。"}
+    ]
+  }
+]

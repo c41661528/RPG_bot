@@ -1,0 +1,38 @@
+[
+  {
+    "id":        "scrap_helmet",
+    "name":      "廢料頭盔",
+    "emoji":     "⛑️",
+    "tier":      1,
+    "def_bonus": 3,
+    "hp_bonus":  20,
+    "desc":      "用廢棄零件拼湊的頭盔，勉強能保護頭部。"
+  },
+  {
+    "id":        "tactical_helmet",
+    "name":      "戰術頭盔",
+    "emoji":     "🪖",
+    "tier":      2,
+    "def_bonus": 6,
+    "hp_bonus":  40,
+    "desc":      "軍用規格戰術頭盔，提供可靠的頭部防護。"
+  },
+  {
+    "id":        "cyber_visor",
+    "name":      "賽博目鏡",
+    "emoji":     "🥽",
+    "tier":      3,
+    "def_bonus": 10,
+    "hp_bonus":  65,
+    "desc":      "整合 HUD 顯示的義體目鏡，戰場數據即時呈現。"
+  },
+  {
+    "id":        "neural_crown",
+    "name":      "神經皇冠",
+    "emoji":     "👑",
+    "tier":      4,
+    "def_bonus": 15,
+    "hp_bonus":  100,
+    "desc":      "軍事級神經接口頭冠，直接強化戰鬥本能。"
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {"id": "rusty_pipe",      "name": "生鏽鋼管",    "emoji": "🔧", "tier": 1, "atk_bonus":  3, "desc": "生鏽的金屬管，不算武器，但打人確實很痛。"},
+  {"id": "glass_shard",     "name": "碎玻璃刀",    "emoji": "🔪", "tier": 1, "atk_bonus":  5, "desc": "用廢棄玻璃磨成的粗糙刀刃，致命但不耐用。"},
+  {"id": "shock_baton",     "name": "電擊警棍",    "emoji": "⚡", "tier": 2, "atk_bonus":  9, "desc": "警方廢棄的電擊棍，電池還有殘餘電量。"},
+  {"id": "modded_pistol",   "name": "改裝手槍",    "emoji": "🔫", "tier": 2, "atk_bonus": 12, "desc": "零件拼湊的手槍，準頭一般但殺傷力夠用。"},
+  {"id": "cyber_blade",     "name": "義體刀刃",    "emoji": "🗡️", "tier": 3, "atk_bonus": 18, "desc": "直接嵌入手臂的單分子刀刃，割穿裝甲如同紙張。"},
+  {"id": "scatter_cannon",  "name": "定製散彈槍",  "emoji": "💥", "tier": 3, "atk_bonus": 22, "desc": "廢土工匠手工改造，近距離幾乎無可匹敵。"},
+  {"id": "rail_pistol",     "name": "磁軌手槍",    "emoji": "🏹", "tier": 4, "atk_bonus": 30, "desc": "電磁加速的高速彈丸，貫穿任何輕型護甲。"},
+  {"id": "neuro_spike",     "name": "神經刺激器",  "emoji": "💀", "tier": 4, "atk_bonus": 26, "desc": "直接干擾敵人神經系統的義體武裝，無聲而致命。"}
+]
