@@ -23,14 +23,13 @@ _ACCESSORIES: dict[str, dict] = {a["id"]: a for a in _load("accessories.json")}
 _MATERIALS:   dict[str, dict] = {m["id"]: m for m in _load_mat()}
 _ALL:         dict[str, dict] = {**_WEAPONS, **_ARMOR, **_HELMETS, **_ACCESSORIES}
 
-# Tier → enemy level mapping for drops
-_TIER_BY_LEVEL: dict[int, list[int]] = {
-    1: [1],
-    2: [1, 2],
-    3: [1, 2, 3],
-    4: [2, 3, 4],
-    5: [3, 4],
-}
+def _tier_pool_for_level(level: int) -> list[int]:
+    """Return the tier pool for a given enemy level (scales to any level)."""
+    if level <= 1:  return [1]
+    if level <= 2:  return [1, 2]
+    if level <= 4:  return [2, 3]
+    if level <= 6:  return [3, 4]
+    return [4]
 
 
 def get_item(item_id: str, custom_items: dict | None = None) -> dict | None:
@@ -133,12 +132,11 @@ def can_enhance(item_id: str, item_enhancements: dict) -> bool:
 
 def try_drop(enemy_level: int) -> dict | None:
     """Returns a random dropped item dict or None (weapons/armor only)."""
-    drop_chance = 0.25 + enemy_level * 0.05   # 30 % at Lv.1 → 50 % at Lv.5
+    drop_chance = min(0.60, 0.25 + enemy_level * 0.05)
     if random.random() > drop_chance:
         return None
 
-    tiers = _TIER_BY_LEVEL.get(enemy_level, [1])
-    tier  = random.choice(tiers)
+    tier = random.choice(_tier_pool_for_level(enemy_level))
 
     pool_w = [w for w in _WEAPONS.values() if w["tier"] == tier]
     pool_a = [a for a in _ARMOR.values()   if a["tier"] == tier]
@@ -148,12 +146,11 @@ def try_drop(enemy_level: int) -> dict | None:
 
 def try_drop_full(enemy_level: int) -> dict | None:
     """Returns weapon/armor/helmet/accessory drop or None."""
-    drop_chance = 0.25 + enemy_level * 0.05
+    drop_chance = min(0.60, 0.25 + enemy_level * 0.05)
     if random.random() > drop_chance:
         return None
 
-    tiers = _TIER_BY_LEVEL.get(enemy_level, [1])
-    tier  = random.choice(tiers)
+    tier = random.choice(_tier_pool_for_level(enemy_level))
 
     pool: list[dict] = []
     for src in (_WEAPONS, _ARMOR, _HELMETS, _ACCESSORIES):

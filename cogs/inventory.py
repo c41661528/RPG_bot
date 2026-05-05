@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import select
 
+from config import ENHANCE_BONUS_PER_LV
 from database.session import AsyncSessionFactory
 from models.character import Character
 from models.player import Player
@@ -27,11 +28,16 @@ _SLOT_ATTR = {
 }
 
 
-def _fmt_item(item: dict) -> str:
-    tier_e = RARITY_EMOJI.get(item.get("tier", 1), "⚪")
+def _fmt_item(item: dict, enh_level: int = 0) -> str:
+    tier_e  = RARITY_EMOJI.get(item.get("tier", 1), "⚪")
+    enh_b   = enh_level * ENHANCE_BONUS_PER_LV
     parts: list[str] = []
-    if item.get("atk_bonus",    0):   parts.append(f"+{item['atk_bonus']} ATK")
-    if item.get("def_bonus",    0):   parts.append(f"+{item['def_bonus']} DEF")
+    if item.get("atk_bonus", 0):
+        total = item["atk_bonus"] + enh_b
+        parts.append(f"+{total} ATK" + (f"(🔨+{enh_b})" if enh_b else ""))
+    if item.get("def_bonus", 0):
+        total = item["def_bonus"] + enh_b
+        parts.append(f"+{total} DEF" + (f"(🔨+{enh_b})" if enh_b else ""))
     if item.get("hp_bonus",     0):   parts.append(f"+{item['hp_bonus']} HP")
     if item.get("energy_bonus", 0):   parts.append(f"+{item['energy_bonus']} ⚡")
     if item.get("crit_bonus",   0.0): parts.append(f"+{int(item['crit_bonus']*100)}% 暴擊")
@@ -41,16 +47,17 @@ def _fmt_item(item: dict) -> str:
 
 def _inventory_embed(char: Character) -> discord.Embed:
     ci  = char.custom_items or {}
+    enh = char.item_enhancements or {}
     w   = get_item(char.equipped_weapon,    ci) if char.equipped_weapon    else None
     a   = get_item(char.equipped_armor,     ci) if char.equipped_armor     else None
     h   = get_item(char.equipped_helmet,    ci) if char.equipped_helmet    else None
     acc = get_item(char.equipped_accessory, ci) if char.equipped_accessory else None
 
     equipped_lines = [
-        f"⚔️  武器：{_fmt_item(w)   if w   else '`空`'}",
-        f"🛡️  護甲：{_fmt_item(a)   if a   else '`空`'}",
-        f"⛑️  頭盔：{_fmt_item(h)   if h   else '`空`'}",
-        f"💠  配件：{_fmt_item(acc) if acc else '`空`'}",
+        f"⚔️  武器：{_fmt_item(w,   enhance_level(char.equipped_weapon,    enh)) if w   else '`空`'}",
+        f"🛡️  護甲：{_fmt_item(a,   enhance_level(char.equipped_armor,     enh)) if a   else '`空`'}",
+        f"⛑️  頭盔：{_fmt_item(h,   enhance_level(char.equipped_helmet,    enh)) if h   else '`空`'}",
+        f"💠  配件：{_fmt_item(acc, enhance_level(char.equipped_accessory, enh)) if acc else '`空`'}",
     ]
 
     # Materials
@@ -80,7 +87,7 @@ def _inventory_embed(char: Character) -> discord.Embed:
             continue
         qty     = count[item_id]
         qty_txt = f" ×{qty}" if qty > 1 else ""
-        bag_lines.append(f"{_fmt_item(item)}{qty_txt}")
+        bag_lines.append(f"{_fmt_item(item, enhance_level(item_id, enh))}{qty_txt}")
 
     bag_text = "\n".join(bag_lines) if bag_lines else "`背包是空的`"
     used = len(inv)
