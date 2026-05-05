@@ -58,10 +58,24 @@ _ENEMIES: list[dict] = _load_enemies()
 
 
 def _pick_enemy(player_level: int) -> dict:
-    same  = [e for e in _ENEMIES if e["level"] == player_level]
-    lower = [e for e in _ENEMIES if e["level"] < player_level]
-    pool  = same or lower or _ENEMIES
-    return random.choice(pool).copy()
+    # Weight: same level ×10, 1 below ×3, 2 below ×1; ignore anything further or higher
+    pool, weights = [], []
+    for e in _ENEMIES:
+        diff = player_level - e["level"]
+        if diff == 0:
+            w = 10
+        elif diff == 1:
+            w = 3
+        elif diff == 2:
+            w = 1
+        else:
+            continue
+        pool.append(e)
+        weights.append(w)
+    if not pool:
+        pool = list(_ENEMIES)
+        weights = [1] * len(pool)
+    return random.choices(pool, weights=weights, k=1)[0].copy()
 
 
 class CombatCog(commands.Cog):

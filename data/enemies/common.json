@@ -115,5 +115,57 @@
     "credits_min": 130,
     "credits_max": 200,
     "description": "企業派遣的重型執法機甲，配備動能護盾與散彈砲，用來鎮壓廢土叛亂。"
+  },
+  {
+    "id": "corporate_agent",
+    "name": "企業特工",
+    "emoji": "🕴️",
+    "level": 6,
+    "hp": 185,
+    "attack": 58,
+    "defense": 22,
+    "exp_reward": 185,
+    "credits_min": 170,
+    "credits_max": 260,
+    "description": "經過義體強化的企業精銳，接受暗殺與情報任務，手段冷酷毫無猶豫。"
+  },
+  {
+    "id": "siege_dreadnought",
+    "name": "攻城無畏艦",
+    "emoji": "🛡️",
+    "level": 6,
+    "hp": 220,
+    "attack": 52,
+    "defense": 28,
+    "exp_reward": 195,
+    "credits_min": 185,
+    "credits_max": 280,
+    "description": "企業軍隊部署的重裝攻城機甲，裝甲厚重如同移動堡壘，專門用來清剿廢土抵抗軍。"
+  },
+  {
+    "id": "nano_elite",
+    "name": "奈米強化精英",
+    "emoji": "⚡",
+    "level": 7,
+    "hp": 250,
+    "attack": 75,
+    "defense": 30,
+    "exp_reward": 250,
+    "credits_min": 230,
+    "credits_max": 360,
+    "description": "體內植入奈米機器的頂級戰鬥兵器，反應速度與力量均遠超常人極限。"
+  },
+  {
+    "id": "ai_hunter",
+    "name": "AI 獵殺者",
+    "emoji": "🔴",
+    "level": 7,
+    "hp": 210,
+    "attack": 85,
+    "defense": 25,
+    "exp_reward": 260,
+    "credits_min": 250,
+    "credits_max": 380,
+    "description": "覺醒的戰鬥 AI，搭載自主學習殺戮模組，將每個目標視為需要消滅的威脅數據。"
   }
 ]
