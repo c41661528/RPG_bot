@@ -87,7 +87,7 @@ def _inventory_embed(char: Character) -> discord.Embed:
             continue
         qty     = count[item_id]
         qty_txt = f" ×{qty}" if qty > 1 else ""
-        bag_lines.append(f"{_fmt_item(item, enhance_level(item_id, enh))}{qty_txt}")
+        bag_lines.append(f"{_fmt_item(item)}{qty_txt}")
 
     bag_text = "\n".join(bag_lines) if bag_lines else "`背包是空的`"
     used = len(inv)
