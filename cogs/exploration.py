@@ -9,7 +9,7 @@ from sqlalchemy import select
 from database.session import AsyncSessionFactory
 from models.character import Character
 from models.player import Player
-from services.equipment_service import get_items_by_tier
+from services.equipment_service import get_items_by_tier, make_instance_id
 from services.quest_service import update_quest_progress
 from utils.embeds import C_DANGER, C_INFO, C_PRIMARY, C_WARNING, error_embed
 
@@ -105,7 +105,7 @@ class ExplorationCog(commands.Cog):
                 inv   = list(char.inventory or [])
                 if pool and len(inv) < _INVENTORY_LIMIT:
                     item = random.choice(pool)
-                    inv.append(item["id"])
+                    inv.append(make_instance_id(item["id"]))
                     char.inventory = inv
                     bonus = f"+{item['atk_bonus']} ATK" if "atk_bonus" in item else f"+{item['def_bonus']} DEF"
                     drop_name = f"{item['emoji']} **{item['name']}** `{bonus}` 已加入背包"

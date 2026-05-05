@@ -1,5 +1,6 @@
 import json
 import random
+import uuid
 from pathlib import Path
 
 _DATA = Path(__file__).parent.parent / "data" / "equipment"
@@ -23,6 +24,16 @@ _ACCESSORIES: dict[str, dict] = {a["id"]: a for a in _load("accessories.json")}
 _MATERIALS:   dict[str, dict] = {m["id"]: m for m in _load_mat()}
 _ALL:         dict[str, dict] = {**_WEAPONS, **_ARMOR, **_HELMETS, **_ACCESSORIES}
 
+def _base_id(instance_id: str) -> str:
+    """Strip the instance suffix (::xxxxxxxx) to get the base item id."""
+    return instance_id.split("::")[0]
+
+
+def make_instance_id(item_id: str) -> str:
+    """Return a unique instance id for a newly created item."""
+    return f"{item_id}::{uuid.uuid4().hex[:8]}"
+
+
 def _tier_pool_for_level(level: int) -> list[int]:
     """Return the tier pool for a given enemy level (scales to any level)."""
     if level <= 1:  return [1]
@@ -33,10 +44,11 @@ def _tier_pool_for_level(level: int) -> list[int]:
 
 
 def get_item(item_id: str, custom_items: dict | None = None) -> dict | None:
-    if item_id in _ALL:
-        return _ALL[item_id]
-    if custom_items and item_id in custom_items:
-        return custom_items[item_id]
+    base = _base_id(item_id)
+    if base in _ALL:
+        return _ALL[base]
+    if custom_items:
+        return custom_items.get(item_id) or custom_items.get(base)
     return None
 
 
@@ -49,19 +61,23 @@ def all_materials() -> list[dict]:
 
 
 def is_weapon(item_id: str) -> bool:
-    return item_id in _WEAPONS or item_id.startswith("ci_w_")
+    b = _base_id(item_id)
+    return b in _WEAPONS or b.startswith("ci_w_")
 
 
 def is_armor(item_id: str) -> bool:
-    return item_id in _ARMOR or item_id.startswith("ci_a_")
+    b = _base_id(item_id)
+    return b in _ARMOR or b.startswith("ci_a_")
 
 
 def is_helmet(item_id: str) -> bool:
-    return item_id in _HELMETS or item_id.startswith("ci_h_")
+    b = _base_id(item_id)
+    return b in _HELMETS or b.startswith("ci_h_")
 
 
 def is_accessory(item_id: str) -> bool:
-    return item_id in _ACCESSORIES or item_id.startswith("ci_ac_")
+    b = _base_id(item_id)
+    return b in _ACCESSORIES or b.startswith("ci_ac_")
 
 
 def item_slot(item_id: str) -> str:
@@ -87,7 +103,7 @@ def equipped_bonuses(
     ci  = custom_items or {}
 
     def _get(iid: str) -> dict | None:
-        return _ALL.get(iid) or ci.get(iid)
+        return _ALL.get(_base_id(iid)) or ci.get(iid) or ci.get(_base_id(iid))
 
     atk = 0
     if equipped_weapon:

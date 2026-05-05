@@ -40,7 +40,7 @@ from services.combat_service import (
     roll_damage,
     tick_statuses,
 )
-from services.equipment_service import equipped_bonuses, try_drop, try_drop_material
+from services.equipment_service import equipped_bonuses, make_instance_id, try_drop, try_drop_material
 from services.quest_service import update_quest_progress, update_weekly_quest_progress
 from ui.combat_view import CombatView
 from utils.embeds import combat_embed, end_combat_embed, error_embed
@@ -509,7 +509,7 @@ class CombatCog(commands.Cog):
                 if drop:
                     inv = list(char.inventory or [])
                     if len(inv) < _INVENTORY_LIMIT:
-                        inv.append(drop["id"])
+                        inv.append(make_instance_id(drop["id"]))
                         char.inventory = inv
                         _q("loot_equipment", 1)
                     else:
