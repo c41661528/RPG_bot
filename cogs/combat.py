@@ -55,27 +55,44 @@ def _load_enemies() -> list[dict]:
 
 
 _ENEMIES: list[dict] = _load_enemies()
+_MAX_JSON_LEVEL: int = max(e["level"] for e in _ENEMIES)
+
+
+def _scale_to_level(template: dict, target_level: int) -> dict:
+    """Return a copy of template with stats scaled to target_level."""
+    enemy = template.copy()
+    ratio = target_level / template["level"]
+    enemy["level"]       = target_level
+    enemy["hp"]          = max(1, round(template["hp"]         * ratio ** 1.2))
+    enemy["attack"]      = max(1, round(template["attack"]     * ratio ** 1.0))
+    enemy["defense"]     = max(0, round(template["defense"]    * ratio ** 1.1))
+    enemy["exp_reward"]  = max(1, round(template["exp_reward"] * ratio ** 1.3))
+    credits_avg          = (template["credits_min"] + template["credits_max"]) / 2
+    half_spread          = (template["credits_max"] - template["credits_min"]) / 2
+    new_avg              = credits_avg  * ratio ** 1.2
+    new_spread           = half_spread  * ratio
+    enemy["credits_min"] = max(0, round(new_avg - new_spread))
+    enemy["credits_max"] = max(1, round(new_avg + new_spread))
+    return enemy
 
 
 def _pick_enemy(player_level: int) -> dict:
-    # Weight: same level ×10, 1 below ×3, 2 below ×1; ignore anything further or higher
-    pool, weights = [], []
-    for e in _ENEMIES:
-        diff = player_level - e["level"]
-        if diff == 0:
-            w = 10
-        elif diff == 1:
-            w = 3
-        elif diff == 2:
-            w = 1
-        else:
-            continue
-        pool.append(e)
-        weights.append(w)
-    if not pool:
-        pool = list(_ENEMIES)
-        weights = [1] * len(pool)
-    return random.choices(pool, weights=weights, k=1)[0].copy()
+    # Weighted level selection: same ×10, one below ×3, two below ×1
+    candidates = [(player_level, 10), (player_level - 1, 3), (player_level - 2, 1)]
+    valid_pairs = [(lvl, w) for lvl, w in candidates if lvl >= 1]
+    levels, weights = zip(*valid_pairs)
+    target_level = random.choices(list(levels), weights=list(weights), k=1)[0]
+
+    # Use predefined enemies when available
+    pool = [e for e in _ENEMIES if e["level"] == target_level]
+    if pool:
+        return random.choice(pool).copy()
+
+    # No JSON enemy at this level — scale from the highest defined level
+    base_level = min(target_level, _MAX_JSON_LEVEL)
+    base_pool  = [e for e in _ENEMIES if e["level"] == base_level] or \
+                 [e for e in _ENEMIES if e["level"] == _MAX_JSON_LEVEL]
+    return _scale_to_level(random.choice(base_pool), target_level)
 
 
 class CombatCog(commands.Cog):
