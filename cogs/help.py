@@ -6,7 +6,7 @@ from utils.embeds import C_DARK, C_INFO
 
 def _help_embed() -> discord.Embed:
     embed = discord.Embed(
-        title="📡  廢土生存手冊  v2.0",
+        title="📡  廢土生存手冊  v3.0",
         description="歡迎來到廢土。以下是所有可用指令。",
         color=C_DARK,
     )
@@ -39,8 +39,20 @@ def _help_embed() -> discord.Embed:
         value=(
             "`/inventory` 　查看背包與裝備欄（武器/護甲/頭盔/配件）\n"
             "`/unequip` 　 卸下任意欄位裝備\n"
-            "`/shop` 　　 查看黑市商品\n"
+            "`/sell` 　　　出售背包中的裝備換取信用點\n"
+            "`/shop` 　　 查看黑市商品（急救包/能量電池）\n"
             "`/buy` 　　　購買急救包或能量電池"
+        ),
+        inline=False,
+    )
+
+    embed.add_field(
+        name="🔧  裝備行 & 材料行",
+        value=(
+            "`/gear_shop` 　　查看黑市裝備行（等級縮放隨機裝備，共 6 件）\n"
+            "`/buy_gear` 　　購買裝備行中的裝備（輸入編號 1–6）\n"
+            "`/mat_shop` 　　查看強化材料行與價格\n"
+            "`/buy_material` 購買強化材料（廢棄金屬／電路板／能量核心／奈米纖維／量子晶片）"
         ),
         inline=False,
     )
@@ -80,16 +92,28 @@ def _help_embed() -> discord.Embed:
         value=(
             "`/rank` 　　 查看等級 / 擊殺數 / 信用點排行榜\n"
             "`/rebirth` 　Lv.50 後轉生，重置等級並獲得永久屬性加成（最多 5 次）\n"
-            "`/achievements` 查看成就進度（16 個成就）"
+            "`/achievements` 查看成就進度（16 個成就）\n"
+            "`/titles` 　 查看與裝備稱號（17 個稱號，部分提供加成）"
         ),
         inline=False,
     )
 
     embed.add_field(
-        name="🔨  強化",
+        name="⚔️  PvP 決鬥",
+        value=(
+            "`/duel @玩家` 　向其他玩家發起決鬥（自動戰鬥，套用裝備＋稱號）\n"
+            "`/pvp_stats` 　查看勝率與今日決鬥次數\n"
+            "　每日上限 5 場、間隔 30 分鐘；勝者奪取 5% 對方信用點 (上限 1000)"
+        ),
+        inline=False,
+    )
+
+    embed.add_field(
+        name="🔨  強化 & 鍛造",
         value=(
             "`/enhance` 　強化已裝備的武器/護甲/頭盔/配件，每級 +2\n"
-            f"　　　　　選擇材料可提升成功率（最高 +{25}%），最高強化 +5"
+            f"　　　　　選擇材料可提升成功率（最高 +{25}%），最高強化 +5\n"
+            "`/craft` 　　鍛造工坊：升階（3件→1件）、重鑄（重新滾屬性）"
         ),
         inline=False,
     )

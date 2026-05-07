@@ -176,6 +176,32 @@ def _gen_accessory(tier: int, level: int) -> tuple[dict, int]:
 
 # ── Public API ────────────────────────────────────────────────────
 
+def generate_item(slot: str, tier: int, level: int) -> tuple[dict, int]:
+    """Generate a single random item (stats_dict, price) for slot/tier/level.
+
+    `slot` may be either an English key ('weapon'/'armor'/'helmet'/'accessory')
+    or the in-game Chinese label ('武器'/'護甲'/'頭盔'/'配件').
+    """
+    fn_map = {
+        "weapon":    _gen_weapon, "armor":     _gen_armor,
+        "helmet":    _gen_helmet, "accessory": _gen_accessory,
+        "武器": _gen_weapon, "護甲": _gen_armor,
+        "頭盔": _gen_helmet, "配件": _gen_accessory,
+    }
+    fn = fn_map[slot]
+    return fn(tier, level)
+
+
+_SLOT_PREFIX = {
+    "weapon": "ci_w",  "armor": "ci_a",  "helmet": "ci_h",  "accessory": "ci_ac",
+    "武器": "ci_w",    "護甲": "ci_a",    "頭盔": "ci_h",    "配件": "ci_ac",
+}
+
+
+def slot_prefix(slot: str) -> str:
+    return _SLOT_PREFIX[slot]
+
+
 def generate_shop_stock(level: int) -> tuple[dict, dict]:
     """Returns (shop_stock, custom_items_to_merge).
 

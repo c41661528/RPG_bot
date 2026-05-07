@@ -27,6 +27,9 @@ COGS = [
     "cogs.achievements",
     "cogs.help",
     "cogs.gear_shop",
+    "cogs.titles",
+    "cogs.craft",
+    "cogs.pvp",
 ]
 
 intents = discord.Intents.default()

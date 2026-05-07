@@ -62,6 +62,15 @@ class Character(Base):
     # {achievement_id: True}
     achievements: Mapped[dict] = mapped_column(JSONB, default=dict)
 
+    # ── Titles ───────────────────────────────────────────────────
+    equipped_title:  Mapped[str | None] = mapped_column(String(60), nullable=True, default=None)
+    # {title_id: True}  +  internal counters: __crafted_once__, __craft_count__
+    unlocked_titles: Mapped[dict]       = mapped_column(JSONB, default=dict)
+
+    # ── PvP ──────────────────────────────────────────────────────
+    # {"wins": int, "losses": int, "last_duel_at": iso, "duels_today": int, "duels_date": str}
+    pvp_stats: Mapped[dict] = mapped_column(JSONB, default=dict)
+
     # ── Dungeon ──────────────────────────────────────────────────
     # {"dungeon_id": str, "floor": int, "hp": int, "energy": int,
     #  "exp_earned": int, "credits_earned": int, "active": bool}

@@ -73,6 +73,7 @@ def class_select_embed() -> discord.Embed:
 def character_profile_embed(character: Character) -> discord.Embed:
     from services.combat_service import derive_player_stats
     from services.equipment_service import equipped_bonuses, get_item
+    from services.title_service import equipped_title_data, rarity_emoji, title_bonuses
 
     class_info = CLASS_DISPLAY[character.class_type.value]
     exp_needed = exp_for_next_level(character.level)
@@ -87,10 +88,15 @@ def character_profile_embed(character: Character) -> discord.Embed:
         character.class_type, character.stat_vitality,
         character.stat_reflex, character.stat_tech, character.level,
     )
-    atk   = base_atk + atk_b
-    def_  = base_def + def_b
+    # Apply title bonuses to displayed combat values
+    tb = title_bonuses(character)
+    atk  = int((base_atk + atk_b) * (1.0 + tb.get("atk_pct", 0.0)))
+    def_ = int((base_def + def_b) * (1.0 + tb.get("def_pct", 0.0)))
 
-    description = "\n".join([
+    title      = equipped_title_data(character)
+    title_line = f"{rarity_emoji(title['rarity'])} {title['emoji']} **{title['name']}**\n"
+
+    description = title_line + "\n".join([
         hp_bar(character.hp_current, character.hp_max),
         energy_bar(character.energy_current, character.energy_max),
         exp_bar(character.exp, exp_needed),
@@ -112,8 +118,8 @@ def character_profile_embed(character: Character) -> discord.Embed:
     embed.add_field(name="⚡ 反應神經", value=str(character.stat_reflex),   inline=True)
     embed.add_field(name="🔧 科技力",   value=str(character.stat_tech),     inline=True)
 
-    # Row 3 — combat power
-    crit_pct = int(crit_b * 100)
+    # Row 3 — combat power (include title crit bonus)
+    crit_pct = int((crit_b + tb.get("crit_bonus", 0.0)) * 100)
     embed.add_field(name="⚔️ ATK",       value=str(atk),                          inline=True)
     embed.add_field(name="🛡️ DEF",       value=str(def_),                         inline=True)
     embed.add_field(name="💥 暴擊率",    value=f"{10 + crit_pct}%",               inline=True)
@@ -123,14 +129,15 @@ def character_profile_embed(character: Character) -> discord.Embed:
     embed.add_field(name="⚔️ 擊殺數",   value=f"{character.kills:,}",        inline=True)
     embed.add_field(name="✨ 可用點數", value=str(character.stat_points_avail), inline=True)
 
-    # Row 5 — equipment (weapon/armor)
-    w   = get_item(character.equipped_weapon)    if character.equipped_weapon    else None
-    a   = get_item(character.equipped_armor)     if character.equipped_armor     else None
-    h   = get_item(character.equipped_helmet)    if character.equipped_helmet    else None
-    acc = get_item(character.equipped_accessory) if character.equipped_accessory else None
-    w_txt   = f"{w['emoji']} {w['name']} `+{w['atk_bonus']} ATK`" if w else "`空`"
-    a_txt   = f"{a['emoji']} {a['name']} `+{a['def_bonus']} DEF`" if a else "`空`"
-    h_txt   = f"{h['emoji']} {h['name']} `+{h['def_bonus']} DEF`" if h else "`空`"
+    # Row 5 — equipment (weapon/armor) — pass custom_items so shop gear resolves
+    ci = character.custom_items or {}
+    w   = get_item(character.equipped_weapon, ci)    if character.equipped_weapon    else None
+    a   = get_item(character.equipped_armor, ci)     if character.equipped_armor     else None
+    h   = get_item(character.equipped_helmet, ci)    if character.equipped_helmet    else None
+    acc = get_item(character.equipped_accessory, ci) if character.equipped_accessory else None
+    w_txt   = f"{w['emoji']} {w['name']} `+{w.get('atk_bonus', 0)} ATK`" if w else "`空`"
+    a_txt   = f"{a['emoji']} {a['name']} `+{a.get('def_bonus', 0)} DEF`" if a else "`空`"
+    h_txt   = f"{h['emoji']} {h['name']} `+{h.get('def_bonus', 0)} DEF`" if h else "`空`"
     acc_txt = f"{acc['emoji']} {acc['name']}" if acc else "`空`"
 
     embed.add_field(name="⚔️ 武器",  value=w_txt,   inline=True)

@@ -29,6 +29,10 @@ _MIGRATIONS = [
     # Gear shop
     "ALTER TABLE characters ADD COLUMN IF NOT EXISTS custom_items JSONB NOT NULL DEFAULT '{}'::jsonb",
     "ALTER TABLE characters ADD COLUMN IF NOT EXISTS shop_stock   JSONB NOT NULL DEFAULT '{}'::jsonb",
+    # Sprint 8 — titles, crafting, PvP
+    "ALTER TABLE characters ADD COLUMN IF NOT EXISTS equipped_title  VARCHAR(60)",
+    "ALTER TABLE characters ADD COLUMN IF NOT EXISTS unlocked_titles JSONB NOT NULL DEFAULT '{}'::jsonb",
+    "ALTER TABLE characters ADD COLUMN IF NOT EXISTS pvp_stats       JSONB NOT NULL DEFAULT '{}'::jsonb",
 ]
 
 
