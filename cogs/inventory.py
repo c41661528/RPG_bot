@@ -4,12 +4,12 @@ import discord
 from discord.ext import bridge, commands
 from sqlalchemy import select
 
-from config import ENHANCE_BONUS_PER_LV
+from config import ENHANCE_BONUS_PER_LV, SHOP_ITEMS
 from database.session import AsyncSessionFactory
 from models.character import Character
 from models.player import Player
 from services.equipment_service import (
-    enhance_level, get_item,
+    enhance_level, get_item, get_material,
     is_accessory, is_armor, is_helmet, is_weapon,
     item_slot, sell_value,
 )
@@ -45,7 +45,47 @@ def _fmt_item(item: dict, enh_level: int = 0) -> str:
     return f"{tier_e} {item['emoji']} **{item['name']}** `{bonus}`"
 
 
+def _consumable_count(char: Character, item_id: str) -> int:
+    if item_id == "medkit":      return char.medkits
+    if item_id == "energy_cell": return char.energy_cells
+    return (char.consumables or {}).get(item_id, 0)
+
+
 def _inventory_embed(char: Character) -> discord.Embed:
+    """物資面板：信用點、消耗品、材料、背包格數（不含裝備細節）。"""
+    used = len(char.inventory or [])
+
+    # Consumables — order follows SHOP_ITEMS, hide zero stocks
+    cons_lines: list[str] = []
+    for it in SHOP_ITEMS:
+        n = _consumable_count(char, it["id"])
+        if n > 0:
+            cons_lines.append(f"{it['emoji']} **{it['name']}** ×{n}")
+    cons_text = "\n".join(cons_lines) if cons_lines else "`無`"
+
+    # Materials
+    mats = char.materials or {}
+    mat_lines: list[str] = []
+    for mid, qty in mats.items():
+        m = get_material(mid)
+        if m and qty > 0:
+            mat_lines.append(f"{m['emoji']} **{m['name']}** ×{qty}")
+    mat_text = "\n".join(mat_lines) if mat_lines else "`無`"
+
+    embed = discord.Embed(
+        title=f"📦  {char.name} 的物資面板",
+        description=f"💰 信用點：**{char.credits:,}**",
+        color=C_INFO,
+    )
+    embed.add_field(name="🧰 消耗品",                                value=cons_text, inline=False)
+    embed.add_field(name="🧪 材料",                                  value=mat_text,  inline=False)
+    embed.add_field(name=f"🎒 背包格數　{used}/{_INVENTORY_LIMIT}",   value="`/gear` 查看與更換裝備", inline=False)
+    embed.set_footer(text="裝備管理用 /gear  ·  購買補給用 /shop")
+    return embed
+
+
+def _gear_embed(char: Character) -> discord.Embed:
+    """裝備面板：四個槽位 + 背包中的裝備清單。"""
     ci  = char.custom_items or {}
     enh = char.item_enhancements or {}
     w   = get_item(char.equipped_weapon,    ci) if char.equipped_weapon    else None
@@ -60,20 +100,7 @@ def _inventory_embed(char: Character) -> discord.Embed:
         f"💠  配件：{_fmt_item(acc, enhance_level(char.equipped_accessory, enh)) if acc else '`空`'}",
     ]
 
-    # Materials
-    mats = char.materials or {}
-    if mats:
-        from services.equipment_service import get_material
-        mat_parts = []
-        for mid, qty in mats.items():
-            m = get_material(mid)
-            if m:
-                mat_parts.append(f"{m['emoji']} {m['name']} ×{qty}")
-        mat_text = "  ".join(mat_parts) if mat_parts else "`無`"
-    else:
-        mat_text = "`無`"
-
-    # Bag — group duplicates
+    # Bag — group duplicates, show enhance level
     inv: list[str] = list(char.inventory or [])
     count = Counter(inv)
     bag_lines: list[str] = []
@@ -87,19 +114,19 @@ def _inventory_embed(char: Character) -> discord.Embed:
             continue
         qty     = count[item_id]
         qty_txt = f" ×{qty}" if qty > 1 else ""
-        bag_lines.append(f"{_fmt_item(item)}{qty_txt}")
-
+        lv      = enhance_level(item_id, enh)
+        lv_txt  = f" `+{lv}`" if lv > 0 else ""
+        bag_lines.append(f"{_fmt_item(item)}{lv_txt}{qty_txt}")
     bag_text = "\n".join(bag_lines) if bag_lines else "`背包是空的`"
     used = len(inv)
 
     embed = discord.Embed(
-        title=f"🎒  {char.name} 的裝備欄",
+        title=f"🛡️  {char.name} 的裝備面板",
         color=C_INFO,
     )
-    embed.add_field(name="▸ 已裝備", value="\n".join(equipped_lines), inline=False)
-    embed.add_field(name="▸ 材料",   value=mat_text,                  inline=False)
-    embed.add_field(name=f"▸ 背包　{used}/{_INVENTORY_LIMIT}", value=bag_text, inline=False)
-    embed.set_footer(text="使用下方選單裝備物品  ·  /unequip 卸下裝備")
+    embed.add_field(name="▸ 已裝備",                                value="\n".join(equipped_lines), inline=False)
+    embed.add_field(name=f"▸ 背包裝備　{used}/{_INVENTORY_LIMIT}",   value=bag_text,                  inline=False)
+    embed.set_footer(text="從下方選單裝備物品  ·  /unequip 卸下、/sell 出售")
     return embed
 
 
@@ -188,8 +215,8 @@ class EquipSelect(discord.ui.Select):
         old_item = get_item(old, ci) if old else None
         old_txt  = f"（替換 {old_item['emoji']} **{old_item['name']}**，已放回背包）" if old_item else ""
         await interaction.response.edit_message(
-            embed=_inventory_embed(char),
-            view=InventoryView(char),
+            embed=_gear_embed(char),
+            view=GearView(char),
         )
         await interaction.followup.send(
             embed=success_embed(
@@ -199,18 +226,17 @@ class EquipSelect(discord.ui.Select):
         )
 
 
-class InventoryView(discord.ui.View):
+class GearView(discord.ui.View):
     def __init__(self, char: Character) -> None:
         super().__init__(timeout=120)
-        sel = EquipSelect(char)
-        self.add_item(sel)
+        self.add_item(EquipSelect(char))
 
 
 class InventoryCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @bridge.bridge_command(name="inventory", description="🎒 查看背包與裝備欄位")
+    @bridge.bridge_command(name="inventory", description="📦 查看物資（信用點/消耗品/材料）")
     async def inventory(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -223,7 +249,22 @@ class InventoryCog(commands.Cog):
         if char is None:
             return await ctx.respond(embed=error_embed("尚未建立角色。使用 `/start`。"), ephemeral=True)
 
-        await ctx.respond(embed=_inventory_embed(char), view=InventoryView(char), ephemeral=True)
+        await ctx.respond(embed=_inventory_embed(char), ephemeral=True)
+
+    @bridge.bridge_command(name="gear", description="🛡️ 查看與更換已裝備的武器/護甲/頭盔/配件")
+    async def gear(self, ctx: discord.ApplicationContext) -> None:
+        async with AsyncSessionFactory() as session:
+            result = await session.execute(
+                select(Character)
+                .join(Player, Character.player_id == Player.id)
+                .where(Player.discord_id == ctx.author.id)
+            )
+            char = result.scalar_one_or_none()
+
+        if char is None:
+            return await ctx.respond(embed=error_embed("尚未建立角色。使用 `/start`。"), ephemeral=True)
+
+        await ctx.respond(embed=_gear_embed(char), view=GearView(char), ephemeral=True)
 
     @bridge.bridge_command(name="unequip", description="🔓 卸下當前裝備的物品")
     async def unequip(
