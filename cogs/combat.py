@@ -18,6 +18,7 @@ from config import (
     DEFEND_ENERGY_COST,
     EMP_GRENADE_STUN,
     ENERGY_CELL_RESTORE,
+    LARGE_MEDKIT_HEAL_PCT,
     MAX_LEVEL,
     MEDKIT_HEAL_PCT,
     NANO_REPAIR_PCT,
@@ -296,6 +297,20 @@ class CombatCog(commands.Cog):
             state.medkits -= 1
             state.items_used_in_fight += 1
             logs.append(f"🩹 使用急救包，恢復 **{heal}** HP！（剩餘 {state.medkits} 個）")
+            state.combo = 0
+
+        elif action == "item_large_medkit":
+            count = state.consumables_in_combat.get("large_medkit", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有大型急救包！", ephemeral=True)
+            heal = max(1, int(state.hp_max * LARGE_MEDKIT_HEAL_PCT))
+            state.hp = min(state.hp_max, state.hp + heal)
+            state.consumables_in_combat["large_medkit"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"🚑 使用大型急救包，恢復 **{heal}** HP！"
+                f"（剩餘 {state.consumables_in_combat['large_medkit']} 個）"
+            )
             state.combo = 0
 
         elif action == "item_energy":

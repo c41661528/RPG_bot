@@ -120,10 +120,12 @@ REBIRTH_REQUIRED_LEVEL   = 50   # must be max level
 REBIRTH_STAT_BONUS       = 2    # +2 to ALL base stats per rebirth
 
 # ── Shop prices ─────────────────────────────────────────────────
-MEDKIT_COST          = 150   # credits
-ENERGY_CELL_COST     = 100   # credits
-MEDKIT_HEAL_PCT      = 0.35  # heals 35 % of max HP
-ENERGY_CELL_RESTORE  = 40    # restores 40 energy
+MEDKIT_COST           = 150   # credits
+ENERGY_CELL_COST      = 100   # credits
+MEDKIT_HEAL_PCT       = 0.35  # heals 35 % of max HP
+LARGE_MEDKIT_COST     = 400   # credits
+LARGE_MEDKIT_HEAL_PCT = 0.70  # heals 70 % of max HP — for higher-level players
+ENERGY_CELL_RESTORE   = 40    # restores 40 energy
 
 SHIELD_CHIP_COST     = 300
 ADRENALINE_COST      = 200
@@ -149,6 +151,11 @@ SHOP_ITEMS: list[dict] = [
         "id": "medkit", "name": "急救包", "emoji": "🩹",
         "cost": MEDKIT_COST, "category": "recovery",
         "desc": f"恢復 {int(MEDKIT_HEAL_PCT * 100)}% 最大 HP",
+    },
+    {
+        "id": "large_medkit", "name": "大型急救包", "emoji": "🚑",
+        "cost": LARGE_MEDKIT_COST, "category": "recovery",
+        "desc": f"恢復 {int(LARGE_MEDKIT_HEAL_PCT * 100)}% 最大 HP（適合高等玩家）",
     },
     {
         "id": "energy_cell", "name": "能量電池", "emoji": "🔋",

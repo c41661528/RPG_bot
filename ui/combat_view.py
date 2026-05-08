@@ -13,7 +13,8 @@ if TYPE_CHECKING:
 
 # (action_suffix, label, emoji, description)
 _ITEM_DEFS = [
-    ("medkit",        "急救包",     "🩹", "回復 HP"),
+    ("medkit",        "急救包",     "🩹", "回復 35% HP"),
+    ("large_medkit",  "大型急救包", "🚑", "回復 70% HP"),
     ("energy",        "能量電池",   "🔋", "回復能量"),
     ("stimulant",     "興奮劑",     "💉", "少量回 HP+能量"),
     ("nano_repair",   "奈米修復劑", "🧬", "持續回 HP"),
