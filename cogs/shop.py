@@ -70,12 +70,12 @@ class ShopCog(commands.Cog):
     async def buy(
         self,
         ctx: discord.ApplicationContext,
-        item: discord.Option(
+        item: bridge.BridgeOption(
             str,
             description="道具名稱",
             choices=[i["name"] for i in SHOP_ITEMS],
         ),
-        quantity: discord.Option(
+        quantity: bridge.BridgeOption(
             int,
             description="購買數量（預設 1）",
             min_value=1,

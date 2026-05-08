@@ -209,7 +209,7 @@ class ProgressionCog(commands.Cog):
     async def rank(
         self,
         ctx: discord.ApplicationContext,
-        sort_by: discord.Option(
+        sort_by: bridge.BridgeOption(
             str,
             description="排序依據",
             choices=["等級", "擊殺數", "信用點"],

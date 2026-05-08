@@ -229,7 +229,7 @@ class InventoryCog(commands.Cog):
     async def unequip(
         self,
         ctx: discord.ApplicationContext,
-        slot: discord.Option(str, description="要卸下的欄位", choices=["武器", "護甲", "頭盔", "配件"]),
+        slot: bridge.BridgeOption(str, description="要卸下的欄位", choices=["武器", "護甲", "頭盔", "配件"]),
     ) -> None:
         attr = _SLOT_ATTR[slot]
 

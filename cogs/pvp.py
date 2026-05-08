@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from config import MAX_LEVEL, STAT_POINTS_PER_LEVEL, exp_for_next_level
@@ -175,11 +175,11 @@ class PvPCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="duel", description="⚔️ 向其他玩家發起 PvP 決鬥")
+    @bridge.bridge_command(name="duel", description="⚔️ 向其他玩家發起 PvP 決鬥")
     async def duel(
         self,
         ctx: discord.ApplicationContext,
-        opponent: discord.Option(discord.Member, description="要挑戰的玩家"),
+        opponent: bridge.BridgeOption(discord.Member, description="要挑戰的玩家"),
     ) -> None:
         if opponent.id == ctx.author.id:
             return await ctx.respond(embed=error_embed("不能跟自己決鬥。"), ephemeral=True)
@@ -214,7 +214,7 @@ class PvPCog(commands.Cog):
             view=view,
         )
 
-    @discord.slash_command(name="pvp_stats", description="⚔️ 查看 PvP 戰績")
+    @bridge.bridge_command(name="pvp_stats", description="⚔️ 查看 PvP 戰績")
     async def pvp_stats(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             char = (await session.execute(

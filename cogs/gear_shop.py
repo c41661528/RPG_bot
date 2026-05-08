@@ -141,7 +141,7 @@ class GearShopCog(commands.Cog):
     async def buy_gear(
         self,
         ctx: discord.ApplicationContext,
-        slot: discord.Option(int, description="裝備編號（1–6）", min_value=1, max_value=6),
+        slot: bridge.BridgeOption(int, description="裝備編號（1–6）", min_value=1, max_value=6),
     ) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -225,12 +225,12 @@ class GearShopCog(commands.Cog):
     async def buy_material(
         self,
         ctx: discord.ApplicationContext,
-        material: discord.Option(
+        material: bridge.BridgeOption(
             str,
             description="材料名稱",
             choices=["廢棄金屬", "電路板", "能量核心", "奈米纖維", "量子晶片"],
         ),
-        quantity: discord.Option(
+        quantity: bridge.BridgeOption(
             int,
             description="購買數量（預設 1）",
             min_value=1,

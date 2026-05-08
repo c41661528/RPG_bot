@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from database.session import AsyncSessionFactory
@@ -140,7 +140,7 @@ class TitlesCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="titles", description="🎖️ 查看與裝備稱號")
+    @bridge.bridge_command(name="titles", description="🎖️ 查看與裝備稱號")
     async def titles(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(

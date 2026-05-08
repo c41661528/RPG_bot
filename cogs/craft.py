@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from database.session import AsyncSessionFactory
@@ -265,7 +265,7 @@ class CraftCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="craft", description="🔨 鍛造工坊：升階或重鑄裝備")
+    @bridge.bridge_command(name="craft", description="🔨 鍛造工坊：升階或重鑄裝備")
     async def craft(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
