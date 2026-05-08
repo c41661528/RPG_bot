@@ -11,18 +11,20 @@ if TYPE_CHECKING:
     from services.combat_service import CombatState
 
 
-# (action_suffix, label, emoji, description)
+# (action_suffix, label, emoji, description, tier)
 _ITEM_DEFS = [
-    ("medkit",        "急救包",     "🩹", "回復 35% HP"),
-    ("large_medkit",  "大型急救包", "🚑", "回復 70% HP"),
-    ("energy",        "能量電池",   "🔋", "回復能量"),
-    ("stimulant",     "興奮劑",     "💉", "少量回 HP+能量"),
-    ("nano_repair",   "奈米修復劑", "🧬", "持續回 HP"),
-    ("adrenaline",    "腎上腺素",   "💊", "暫時提升攻擊力"),
-    ("shield_chip",   "護盾晶片",   "🔰", "獲得格擋與反擊"),
-    ("corrosive_vial","腐蝕瓶",     "🧪", "對敵人持續中毒"),
-    ("emp_grenade",   "EMP手雷",    "⚡", "癱瘓敵人 1 回合"),
+    ("medkit",        "急救包",     "🩹", "回復 35% HP",        1),
+    ("large_medkit",  "大型急救包", "🚑", "回復 70% HP",        3),
+    ("energy",        "能量電池",   "🔋", "回復能量",           1),
+    ("stimulant",     "興奮劑",     "💉", "少量回 HP+能量",     2),
+    ("nano_repair",   "奈米修復劑", "🧬", "持續回 HP",          3),
+    ("adrenaline",    "腎上腺素",   "💊", "暫時提升攻擊力",     2),
+    ("shield_chip",   "護盾晶片",   "🔰", "獲得格擋與反擊",     3),
+    ("corrosive_vial","腐蝕瓶",     "🧪", "對敵人持續中毒",     2),
+    ("emp_grenade",   "EMP手雷",    "⚡", "癱瘓敵人 1 回合",    4),
 ]
+
+_TIER_E = {1: "⚪", 2: "🟢", 3: "🔵", 4: "🟣"}
 
 
 def _item_count(state: CombatState, action: str) -> int:
@@ -39,16 +41,17 @@ class ItemSelect(discord.ui.Select):
         self.character_id = character_id
 
         options: list[discord.SelectOption] = []
-        for action, label, emoji, desc in _ITEM_DEFS:
+        for action, label, emoji, desc, tier in _ITEM_DEFS:
             count = _item_count(state, action)
             if count <= 0:
                 continue
+            tier_e = _TIER_E.get(tier, "⚪")
             options.append(
                 discord.SelectOption(
                     label=f"{label} ×{count}",
                     value=action,
                     emoji=emoji,
-                    description=desc,
+                    description=f"{tier_e} {desc}",
                 )
             )
 

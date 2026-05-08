@@ -145,50 +145,54 @@ EMP_GRENADE_STUN     = 1      # turns
 NANO_REPAIR_PCT      = 0.12   # 12 % HP per turn
 NANO_REPAIR_TURNS    = 3
 
+# ── Item rarity colour palette (shared with equipment) ─────────
+TIER_EMOJI: dict[int, str] = {1: "⚪", 2: "🟢", 3: "🔵", 4: "🟣"}
+
 # ── Unified shop catalogue ─────────────────────────────────────
+# tier 1: basic    tier 2: utility/buff    tier 3: advanced    tier 4: premium
 SHOP_ITEMS: list[dict] = [
     {
-        "id": "medkit", "name": "急救包", "emoji": "🩹",
+        "id": "medkit", "name": "急救包", "emoji": "🩹", "tier": 1,
         "cost": MEDKIT_COST, "category": "recovery",
         "desc": f"恢復 {int(MEDKIT_HEAL_PCT * 100)}% 最大 HP",
     },
     {
-        "id": "large_medkit", "name": "大型急救包", "emoji": "🚑",
+        "id": "large_medkit", "name": "大型急救包", "emoji": "🚑", "tier": 3,
         "cost": LARGE_MEDKIT_COST, "category": "recovery",
         "desc": f"恢復 {int(LARGE_MEDKIT_HEAL_PCT * 100)}% 最大 HP（適合高等玩家）",
     },
     {
-        "id": "energy_cell", "name": "能量電池", "emoji": "🔋",
+        "id": "energy_cell", "name": "能量電池", "emoji": "🔋", "tier": 1,
         "cost": ENERGY_CELL_COST, "category": "recovery",
         "desc": f"恢復 {ENERGY_CELL_RESTORE} 能量",
     },
     {
-        "id": "stimulant", "name": "興奮劑", "emoji": "💉",
+        "id": "stimulant", "name": "興奮劑", "emoji": "💉", "tier": 2,
         "cost": STIMULANT_COST, "category": "recovery",
         "desc": f"恢復 {int(STIMULANT_HEAL_PCT * 100)}% HP + {STIMULANT_ENERGY} 能量",
     },
     {
-        "id": "nano_repair", "name": "奈米修復劑", "emoji": "🧬",
+        "id": "nano_repair", "name": "奈米修復劑", "emoji": "🧬", "tier": 3,
         "cost": NANO_REPAIR_COST, "category": "recovery",
         "desc": f"每回合恢復 {int(NANO_REPAIR_PCT * 100)}% HP，持續 {NANO_REPAIR_TURNS} 回合",
     },
     {
-        "id": "adrenaline", "name": "腎上腺素", "emoji": "💊",
+        "id": "adrenaline", "name": "腎上腺素", "emoji": "💊", "tier": 2,
         "cost": ADRENALINE_COST, "category": "combat",
         "desc": f"ATK +{int((ADRENALINE_ATK_MULT - 1) * 100)}%，持續 {ADRENALINE_DURATION} 回合",
     },
     {
-        "id": "shield_chip", "name": "護盾晶片", "emoji": "🔰",
+        "id": "shield_chip", "name": "護盾晶片", "emoji": "🔰", "tier": 3,
         "cost": SHIELD_CHIP_COST, "category": "combat",
         "desc": "抵擋下一次敵人攻擊",
     },
     {
-        "id": "corrosive_vial", "name": "腐蝕瓶", "emoji": "🧪",
+        "id": "corrosive_vial", "name": "腐蝕瓶", "emoji": "🧪", "tier": 2,
         "cost": CORROSIVE_VIAL_COST, "category": "combat",
         "desc": f"敵人中毒 {CORROSIVE_VIAL_TURNS} 回合，每回合 -{int(CORROSIVE_VIAL_PCT * 100)}% HP",
     },
     {
-        "id": "emp_grenade", "name": "電磁脈衝彈", "emoji": "⚡",
+        "id": "emp_grenade", "name": "電磁脈衝彈", "emoji": "⚡", "tier": 4,
         "cost": EMP_GRENADE_COST, "category": "combat",
         "desc": f"癱瘓敵人 {EMP_GRENADE_STUN} 回合",
     },

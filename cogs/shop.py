@@ -2,7 +2,7 @@ import discord
 from discord.ext import bridge, commands
 from sqlalchemy import select
 
-from config import SHOP_ITEMS, SHOP_ITEMS_BY_NAME
+from config import SHOP_ITEMS, SHOP_ITEMS_BY_NAME, TIER_EMOJI
 from database.session import AsyncSessionFactory
 from models.character import Character
 from models.player import Player
@@ -34,9 +34,10 @@ def _shop_embed(char: Character) -> discord.Embed:
     def _fmt(items: list[dict]) -> str:
         lines = []
         for item in items:
-            stock = _item_stock(char, item["id"])
+            stock  = _item_stock(char, item["id"])
+            tier_e = TIER_EMOJI.get(item.get("tier", 1), "⚪")
             lines.append(
-                f"{item['emoji']} **{item['name']}**　{item['cost']:,} 💰　`×{stock}`\n"
+                f"{tier_e} {item['emoji']} **{item['name']}**　{item['cost']:,} 💰　`×{stock}`\n"
                 f"　{item['desc']}"
             )
         return "\n".join(lines)

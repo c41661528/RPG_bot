@@ -20,15 +20,12 @@ CREATOR_DISCORD_ID = 1325263341937229906
 
 
 _TITLES: list[dict] = [
-    # ── Creator (exclusive) ──────────────────────────────────────
+    # ── Creator (exclusive, cosmetic only) ───────────────────────
     {
         "id": "creator_t", "name": "創世者-宅宅", "emoji": "🌌",
-        "desc": "廢土的創世者本人，全屬性 +10%、暴擊 +5%、信用點/EXP +10%。",
+        "desc": "廢土的創世者本人。純裝飾，不影響戰力。",
         "rarity": 4,
-        "bonuses": {
-            "atk_pct": 0.10, "def_pct": 0.10, "hp_pct": 0.10,
-            "crit_bonus": 0.05, "credits_pct": 0.10, "exp_pct": 0.10,
-        },
+        "bonuses": {},
         "unlock": lambda c: bool((c.unlocked_titles or {}).get("__creator__")),
     },
     # ── Default ──────────────────────────────────────────────────
