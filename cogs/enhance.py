@@ -1,7 +1,7 @@
 import random
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -230,7 +230,7 @@ class EnhanceCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="enhance", description="🔨 強化已裝備的武器、護甲、頭盔或配件")
+    @bridge.bridge_command(name="enhance", description="🔨 強化已裝備的武器、護甲、頭盔或配件")
     async def enhance(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(

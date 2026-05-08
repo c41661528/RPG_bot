@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from config import MAX_LEVEL, STAT_POINTS_PER_LEVEL, exp_for_next_level
@@ -161,7 +161,7 @@ class QuestsCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="quest", description="📋 查看今日每日任務")
+    @bridge.bridge_command(name="quest", description="📋 查看今日每日任務")
     async def quest(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -180,7 +180,7 @@ class QuestsCog(commands.Cog):
         view = ClaimView(char, ctx.author.id, mode="daily")
         await ctx.respond(embed=_quest_embed(char, quests, "daily"), view=view, ephemeral=True)
 
-    @discord.slash_command(name="weekly_quest", description="📅 查看本週週常任務")
+    @bridge.bridge_command(name="weekly_quest", description="📅 查看本週週常任務")
     async def weekly_quest(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(

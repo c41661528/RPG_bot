@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from config import CLASS_BASE_STATS, CLASS_DISPLAY, STARTING_CREDITS, STARTING_LOCATION
@@ -106,10 +106,14 @@ class CharacterNameModal(discord.ui.Modal):
 
         embed = success_embed(
             f"**{class_info['emoji']} {name}** 的意識已接入廢土網路。\n\n"
-            f"職業：{class_info['name']}\n"
-            f"位置：{STARTING_LOCATION}\n"
+            f"職業：{class_info['name']}　│　位置：{STARTING_LOCATION}\n"
             f"起始信用點：**{STARTING_CREDITS:,}** 💰\n\n"
-            f"輸入 `/profile` 查看你的狀態面板。"
+            "**▸ 下一步**\n"
+            "1️⃣  `/fight` 或 `!fight` — 開始第一場戰鬥\n"
+            "2️⃣  `/profile` — 查看角色狀態\n"
+            "3️⃣  `/inventory` — 管理裝備與背包\n"
+            "4️⃣  `/rpg_help` — 看完整指令清單\n\n"
+            "💡 所有指令都可用 `/` 或 `!` 觸發（例：`!fight`）。"
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -148,7 +152,7 @@ class CharacterCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="start", description="⚡ 連線至廢土網路，建立你的角色")
+    @bridge.bridge_command(name="start", description="⚡ 連線至廢土網路，建立你的角色")
     async def start(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -182,7 +186,7 @@ class CharacterCog(commands.Cog):
 
         await ctx.respond(embed=class_select_embed(), view=ClassSelectView(player_id), ephemeral=True)
 
-    @discord.slash_command(name="profile", description="📋 查看你的角色狀態面板")
+    @bridge.bridge_command(name="profile", description="📋 查看你的角色狀態面板")
     async def profile(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -198,7 +202,7 @@ class CharacterCog(commands.Cog):
 
         await ctx.respond(embed=character_profile_embed(character))
 
-    @discord.slash_command(name="rest", description="🛌 在安全區休息，完全恢復 HP（花費 50 信用點）")
+    @bridge.bridge_command(name="rest", description="🛌 在安全區休息，完全恢復 HP（花費 50 信用點）")
     async def rest(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -236,7 +240,7 @@ class CharacterCog(commands.Cog):
         )
         await ctx.respond(embed=embed, ephemeral=True)
 
-    @discord.slash_command(name="allocate", description="⚙️ 分配可用的屬性點")
+    @bridge.bridge_command(name="allocate", description="⚙️ 分配可用的屬性點")
     async def allocate(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(

@@ -11,16 +11,16 @@ if TYPE_CHECKING:
     from services.combat_service import CombatState
 
 
-# (action_suffix, label, emoji, row)
+# (action_suffix, label, emoji, description)
 _ITEM_DEFS = [
-    ("medkit",        "急救包",    "🩹", 2),
-    ("energy",        "能量電池",  "🔋", 2),
-    ("stimulant",     "興奮劑",    "💉", 2),
-    ("nano_repair",   "奈米修復劑","🧬", 2),
-    ("adrenaline",    "腎上腺素",  "💊", 3),
-    ("shield_chip",   "護盾晶片",  "🔰", 3),
-    ("corrosive_vial","腐蝕瓶",    "🧪", 3),
-    ("emp_grenade",   "EMP手雷",   "⚡", 3),
+    ("medkit",        "急救包",     "🩹", "回復 HP"),
+    ("energy",        "能量電池",   "🔋", "回復能量"),
+    ("stimulant",     "興奮劑",     "💉", "少量回 HP+能量"),
+    ("nano_repair",   "奈米修復劑", "🧬", "持續回 HP"),
+    ("adrenaline",    "腎上腺素",   "💊", "暫時提升攻擊力"),
+    ("shield_chip",   "護盾晶片",   "🔰", "獲得格擋與反擊"),
+    ("corrosive_vial","腐蝕瓶",     "🧪", "對敵人持續中毒"),
+    ("emp_grenade",   "EMP手雷",    "⚡", "癱瘓敵人 1 回合"),
 ]
 
 
@@ -32,30 +32,43 @@ def _item_count(state: CombatState, action: str) -> int:
     return state.consumables_in_combat.get(action, 0)
 
 
-class ItemButton(discord.ui.Button):
-    def __init__(
-        self,
-        cog: CombatCog,
-        character_id: int,
-        action: str,
-        label: str,
-        emoji: str,
-        count: int,
-        row: int,
-    ) -> None:
-        super().__init__(
-            label=f"{label} ×{count}",
-            emoji=emoji,
-            style=discord.ButtonStyle.secondary,
-            disabled=count <= 0,
-            row=row,
-        )
+class ItemSelect(discord.ui.Select):
+    def __init__(self, cog: CombatCog, character_id: int, state: CombatState) -> None:
         self.cog          = cog
         self.character_id = character_id
-        self.action       = action
+
+        options: list[discord.SelectOption] = []
+        for action, label, emoji, desc in _ITEM_DEFS:
+            count = _item_count(state, action)
+            if count <= 0:
+                continue
+            options.append(
+                discord.SelectOption(
+                    label=f"{label} ×{count}",
+                    value=action,
+                    emoji=emoji,
+                    description=desc,
+                )
+            )
+
+        disabled = not options
+        if not options:
+            options = [discord.SelectOption(label="（沒有可用道具）", value="__none__")]
+
+        super().__init__(
+            placeholder="🎒 使用道具...",
+            options=options,
+            min_values=1,
+            max_values=1,
+            row=2,
+            disabled=disabled,
+        )
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        await self.cog.process_turn(interaction, self.character_id, f"item_{self.action}")
+        action = self.values[0]
+        if action == "__none__":
+            return await interaction.response.defer()
+        await self.cog.process_turn(interaction, self.character_id, f"item_{action}")
 
 
 class SkillSelect(discord.ui.Select):
@@ -96,10 +109,8 @@ class CombatView(discord.ui.View):
         # ── Row 1: skill select ───────────────────────────────────
         self.add_item(SkillSelect(cog, character_id, state))
 
-        # ── Rows 2–3: item buttons (data-driven) ─────────────────
-        for action, label, emoji, row in _ITEM_DEFS:
-            count = _item_count(state, action)
-            self.add_item(ItemButton(cog, character_id, action, label, emoji, count, row))
+        # ── Row 2: item select ───────────────────────────────────
+        self.add_item(ItemSelect(cog, character_id, state))
 
         # Disable defend when low energy
         can_defend = state.energy >= DEFEND_ENERGY_COST

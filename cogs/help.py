@@ -1,143 +1,87 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from utils.embeds import C_DARK, C_INFO
 
 
 def _help_embed() -> discord.Embed:
     embed = discord.Embed(
-        title="📡  廢土生存手冊  v3.0",
-        description="歡迎來到廢土。以下是所有可用指令。",
+        title="📡  廢土指令手冊",
+        description="所有指令都支援 `/` 或 `!` 前綴，例：`/fight` 或 `!fight`",
         color=C_DARK,
     )
 
     embed.add_field(
-        name="👤  角色",
+        name="🌟  新手必看",
         value=(
-            "`/start` 　　建立你的廢土角色\n"
-            "`/profile` 　查看角色狀態面板\n"
-            "`/allocate` 　分配升級獲得的屬性點\n"
-            "`/rest` 　　 花費 **50** 💰 完全恢復 HP 與能量"
+            "`start` 建角色　`profile` 看狀態　`fight` 戰鬥\n"
+            "`explore` 探索　`inventory` 背包　`rest` 休息回血"
         ),
         inline=False,
     )
 
     embed.add_field(
-        name="⚔️  戰鬥",
+        name="⚔️  戰鬥 & 探索",
         value=(
-            "`/fight` 　　在當前地點遭遇並挑戰敵人\n"
-            "　⚔️ 攻擊（連擊累積傷害+10%/層）\n"
-            "　🛡️ 防禦（-70%傷害+反擊，消耗能量）\n"
-            "　💠 技能選單（3個職業技能）\n"
-            "　🩹 急救包　🔋 能量電池　🏃 逃跑"
+            "`fight` 戰鬥　`explore` 探索掉寶\n"
+            "`travel` 移動地點　`dungeon` 5 層迷宮"
         ),
         inline=False,
     )
 
     embed.add_field(
-        name="🎒  裝備 & 道具",
+        name="🎒  裝備 & 商店",
         value=(
-            "`/inventory` 　查看背包與裝備欄（武器/護甲/頭盔/配件）\n"
-            "`/unequip` 　 卸下任意欄位裝備\n"
-            "`/sell` 　　　出售背包中的裝備換取信用點\n"
-            "`/shop` 　　 查看黑市商品（急救包/能量電池）\n"
-            "`/buy` 　　　購買急救包或能量電池"
+            "`inventory` 背包　`unequip` 卸裝　`sell` 賣裝備\n"
+            "`shop` 道具行　`buy` 買道具\n"
+            "`gear_shop` 裝備行　`buy_gear` 買裝備\n"
+            "`mat_shop` 材料行　`buy_material` 買材料\n"
+            "`enhance` 強化（+1~+5，可用材料提升成功率）\n"
+            "`craft` 鍛造工坊（升階／重鑄裝備）"
         ),
         inline=False,
     )
 
     embed.add_field(
-        name="🔧  裝備行 & 材料行",
+        name="📋  任務 & 成就",
         value=(
-            "`/gear_shop` 　　查看黑市裝備行（等級縮放隨機裝備，共 6 件）\n"
-            "`/buy_gear` 　　購買裝備行中的裝備（輸入編號 1–6）\n"
-            "`/mat_shop` 　　查看強化材料行與價格\n"
-            "`/buy_material` 購買強化材料（廢棄金屬／電路板／能量核心／奈米纖維／量子晶片）"
+            "`quest` 每日任務　`weekly_quest` 週常任務\n"
+            "`achievements` 成就（16 個）　`titles` 稱號（17 個，部分加成）"
         ),
         inline=False,
     )
 
     embed.add_field(
-        name="🗺️  探索",
+        name="🥊  PvP 決鬥",
         value=(
-            "`/explore` 　在當前地點搜刮物資（寶箱 / 陷阱 / 補給 / 裝備）\n"
-            "`/travel` 　 移動到其他地點\n\n"
-            "**地點解鎖：** 🏚️ 廢墟東區 Lv.1　🏭 工業廢墟 Lv.3　🏢 企業廢棄總部 Lv.5　🌑 深層地下道 Lv.8"
+            "`duel @玩家` 向人發起決鬥（自動戰鬥，套用裝備+稱號）\n"
+            "`pvp_stats` 查看戰績\n"
+            "每日上限 5 場、間隔 30 分鐘，勝者奪 5% 信用點（最多 1000）"
         ),
         inline=False,
     )
 
     embed.add_field(
-        name="🗺️  迷宮",
+        name="📈  成長",
         value=(
-            "`/dungeon` 　挑戰 5 層迷宮（自動戰鬥），第 5 層為 Boss\n"
-            "　層層通關或隨時撤退，通關獎勵豐厚\n"
-            "　廢棄工廠 Lv.1　企業伺服器室 Lv.5　地下競技場 Lv.8"
+            "`allocate` 配屬性點　`rank` 排行榜\n"
+            "`rebirth` 轉生（Lv.50 後，最多 5 次）"
         ),
         inline=False,
     )
 
     embed.add_field(
-        name="📋  任務",
+        name="💡  小提醒",
         value=(
-            "`/quest` 　　　每日任務（3個，依等級縮放，每日 0 點重置）\n"
-            "`/weekly_quest`  週常任務（3個，更高獎勵，每週一重置）\n"
-            "　　　　　完成後點擊「領取獎勵」獲得 EXP + 信用點"
+            "• 戰鬥中：⚔️攻擊　🛡️防禦　🏃逃跑　💠技能選單　🎒道具選單\n"
+            "• 武器+ATK　護甲/頭盔+DEF　配件+能量/暴擊\n"
+            "• 強化跟著「那件裝備」走，賣了會清掉\n"
+            "• 稱號可在 `titles` 切換，部分提供 ATK/DEF/信用點%等加成"
         ),
         inline=False,
     )
 
-    embed.add_field(
-        name="🏆  排行 & 成長",
-        value=(
-            "`/rank` 　　 查看等級 / 擊殺數 / 信用點排行榜\n"
-            "`/rebirth` 　Lv.50 後轉生，重置等級並獲得永久屬性加成（最多 5 次）\n"
-            "`/achievements` 查看成就進度（16 個成就）\n"
-            "`/titles` 　 查看與裝備稱號（17 個稱號，部分提供加成）"
-        ),
-        inline=False,
-    )
-
-    embed.add_field(
-        name="⚔️  PvP 決鬥",
-        value=(
-            "`/duel @玩家` 　向其他玩家發起決鬥（自動戰鬥，套用裝備＋稱號）\n"
-            "`/pvp_stats` 　查看勝率與今日決鬥次數\n"
-            "　每日上限 5 場、間隔 30 分鐘；勝者奪取 5% 對方信用點 (上限 1000)"
-        ),
-        inline=False,
-    )
-
-    embed.add_field(
-        name="🔨  強化 & 鍛造",
-        value=(
-            "`/enhance` 　強化已裝備的武器/護甲/頭盔/配件，每級 +2\n"
-            f"　　　　　選擇材料可提升成功率（最高 +{25}%），最高強化 +5\n"
-            "`/craft` 　　鍛造工坊：升階（3件→1件）、重鑄（重新滾屬性）"
-        ),
-        inline=False,
-    )
-
-    embed.add_field(
-        name="💠  職業技能（各 3 個，從技能選單選擇）",
-        value=(
-            "⚔️ **街頭武士**　🗡️ 暴怒斬(2×傷害)　🛡️ 鐵壁防禦(-70%+反擊)　⚡ 義體超載(ATK×1.5/3回)\n"
-            "💻 **竄網使**　　💀 神經駭入(傷害+癱瘓)　🦠 病毒植入(中毒3回)　🔌 電磁爆(1.5×+感電)\n"
-            "🗡️ **拾荒者**　　⚡ 速攻連擊(雙段)　💨 煙霧彈(閃避+逃跑95%)　🗡️ 毒刃(傷害+中毒3回)"
-        ),
-        inline=False,
-    )
-
-    embed.add_field(
-        name="🧪  材料",
-        value=(
-            "打怪有機率掉落材料（🔩🖥️🔋🧵💎）\n"
-            "在 `/enhance` 選擇材料使用，提升強化成功率 +5%～+25%"
-        ),
-        inline=False,
-    )
-
-    embed.set_footer(text="裝備武器↑ATK · 護甲↑DEF · 頭盔↑DEF+HP · 配件↑能量+暴擊率")
+    embed.set_footer(text="新手提示：先 /start 建角色，再 /fight 開打")
     return embed
 
 
@@ -145,7 +89,7 @@ class HelpCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="rpg_help", description="📡 查看所有可用指令")
+    @bridge.bridge_command(name="rpg_help", description="📡 查看所有可用指令")
     async def rpg_help(self, ctx: discord.ApplicationContext) -> None:
         await ctx.respond(embed=_help_embed(), ephemeral=True)
 

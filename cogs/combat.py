@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from config import (
@@ -102,7 +102,7 @@ class CombatCog(commands.Cog):
 
     # ── Commands ─────────────────────────────────────────────────
 
-    @discord.slash_command(name="fight", description="⚔️ 在當前區域尋找並挑戰敵人")
+    @bridge.bridge_command(name="fight", description="⚔️ 在當前區域尋找並挑戰敵人")
     async def fight(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
