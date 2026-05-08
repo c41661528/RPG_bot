@@ -72,7 +72,7 @@ def class_select_embed() -> discord.Embed:
 
 def character_profile_embed(character: Character) -> discord.Embed:
     from services.combat_service import derive_player_stats
-    from services.equipment_service import equipped_bonuses, get_item
+    from services.equipment_service import equipped_bonuses
     from services.title_service import equipped_title_data, rarity_emoji, title_bonuses
 
     class_info = CLASS_DISPLAY[character.class_type.value]
@@ -129,31 +129,13 @@ def character_profile_embed(character: Character) -> discord.Embed:
     embed.add_field(name="⚔️ 擊殺數",   value=f"{character.kills:,}",        inline=True)
     embed.add_field(name="✨ 可用點數", value=str(character.stat_points_avail), inline=True)
 
-    # Row 5 — equipment (weapon/armor) — pass custom_items so shop gear resolves
-    ci = character.custom_items or {}
-    w   = get_item(character.equipped_weapon, ci)    if character.equipped_weapon    else None
-    a   = get_item(character.equipped_armor, ci)     if character.equipped_armor     else None
-    h   = get_item(character.equipped_helmet, ci)    if character.equipped_helmet    else None
-    acc = get_item(character.equipped_accessory, ci) if character.equipped_accessory else None
-    w_txt   = f"{w['emoji']} {w['name']} `+{w.get('atk_bonus', 0)} ATK`" if w else "`空`"
-    a_txt   = f"{a['emoji']} {a['name']} `+{a.get('def_bonus', 0)} DEF`" if a else "`空`"
-    h_txt   = f"{h['emoji']} {h['name']} `+{h.get('def_bonus', 0)} DEF`" if h else "`空`"
-    acc_txt = f"{acc['emoji']} {acc['name']}" if acc else "`空`"
-
-    embed.add_field(name="⚔️ 武器",  value=w_txt,   inline=True)
-    embed.add_field(name="🛡️ 護甲",  value=a_txt,   inline=True)
-    embed.add_field(name="⛑️ 頭盔",  value=h_txt,   inline=True)
-    embed.add_field(name="💠 配件",  value=acc_txt, inline=True)
-    embed.add_field(name="🎒 背包",  value=f"{len(character.inventory or [])} / 20", inline=True)
-    embed.add_field(name="🩹 急救包", value=str(character.medkits), inline=True)
-
     embed.add_field(
         name="⚡ 快速指令",
-        value="`/fight` 戰鬥　`/explore` 探索　`/inventory` 背包　`/shop` 商店　`/rpg_help` 全部指令",
+        value="`/fight` 戰鬥　`/explore` 探索　`/inventory` 裝備　`/shop` 商店　`/rpg_help` 全部指令",
         inline=False,
     )
 
-    embed.set_footer(text=f"📍 {character.current_location}　·　指令前綴可用 / 或 !")
+    embed.set_footer(text=f"📍 {character.current_location}　·　裝備管理請用 /inventory")
     return embed
 
 

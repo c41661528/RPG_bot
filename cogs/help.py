@@ -35,8 +35,7 @@ def _guide_embed() -> discord.Embed:
     embed.add_field(
         name="③ 管理裝備",
         value=(
-            "`gear` — 查看與更換武器/護甲/頭盔/配件\n"
-            "`inventory` — 查看信用點、消耗品、材料等物資\n"
+            "`inventory` — 查看背包、裝備武器/護甲/頭盔/配件\n"
             "`shop` / `buy` — 買急救包、能量電池等補給"
         ),
         inline=False,
@@ -78,7 +77,7 @@ def _full_help_embed() -> discord.Embed:
         name="🌟  新手必看",
         value=(
             "`start` 建角色　`profile` 看狀態　`fight` 戰鬥\n"
-            "`explore` 探索　`gear` 裝備　`inventory` 物資　`rest` 休息回血"
+            "`explore` 探索　`inventory` 背包　`rest` 休息回血"
         ),
         inline=False,
     )
@@ -95,8 +94,7 @@ def _full_help_embed() -> discord.Embed:
     embed.add_field(
         name="🎒  裝備 & 商店",
         value=(
-            "`gear` 裝備面板　`unequip` 卸裝　`sell` 賣裝備\n"
-            "`inventory` 物資面板（信用點/消耗品/材料）\n"
+            "`inventory` 背包　`unequip` 卸裝　`sell` 賣裝備\n"
             "`shop` 道具行　`buy` 買道具\n"
             "`gear_shop` 裝備行　`buy_gear` 買裝備\n"
             "`mat_shop` 材料行　`buy_material` 買材料\n"
