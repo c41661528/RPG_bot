@@ -4,7 +4,69 @@ from discord.ext import bridge, commands
 from utils.embeds import C_DARK, C_INFO
 
 
-def _help_embed() -> discord.Embed:
+# ── 新手入門須知（精簡版）─────────────────────────────────────
+
+def _guide_embed() -> discord.Embed:
+    embed = discord.Embed(
+        title="🌅  廢土新手入門須知",
+        description=(
+            "歡迎來到廢土！這裡是基本生存指南，照著做就能上手。\n"
+            "_所有指令支援 `/` 或 `!` 前綴，例如 `/fight` = `!fight`_"
+        ),
+        color=C_INFO,
+    )
+
+    embed.add_field(
+        name="① 建立角色",
+        value="`start` — 選職業、取名，從這裡開始你的廢土生涯。",
+        inline=False,
+    )
+
+    embed.add_field(
+        name="② 戰鬥賺取資源",
+        value=(
+            "`fight` — 與敵人戰鬥取得 EXP、信用點、裝備\n"
+            "`explore` — 在當前地點搜刮物資\n"
+            "`rest` — HP 不足時花 50💰 完全恢復"
+        ),
+        inline=False,
+    )
+
+    embed.add_field(
+        name="③ 管理裝備",
+        value=(
+            "`inventory` — 查看背包、裝備武器/護甲/頭盔/配件\n"
+            "`shop` / `buy` — 買急救包、能量電池等補給"
+        ),
+        inline=False,
+    )
+
+    embed.add_field(
+        name="④ 升級成長",
+        value=(
+            "`profile` — 查看你的角色狀態\n"
+            "`allocate` — 升級獲得屬性點，分配給體力/反應/科技\n"
+            "`quest` — 完成每日任務領 EXP 獎勵"
+        ),
+        inline=False,
+    )
+
+    embed.add_field(
+        name="💡  進階功能",
+        value=(
+            "強化、鍛造、迷宮、PvP決鬥、稱號、週常任務、成就⋯⋯\n"
+            "全部指令請輸入 **`!rpg_help`** 查看。"
+        ),
+        inline=False,
+    )
+
+    embed.set_footer(text="先 /start 建角色 → /fight 開打 → /inventory 裝備 → /rest 回血")
+    return embed
+
+
+# ── 完整指令列表 ─────────────────────────────────────────────
+
+def _full_help_embed() -> discord.Embed:
     embed = discord.Embed(
         title="📡  廢土指令手冊",
         description="所有指令都支援 `/` 或 `!` 前綴，例：`/fight` 或 `!fight`",
@@ -85,13 +147,19 @@ def _help_embed() -> discord.Embed:
     return embed
 
 
+# ── Cog ──────────────────────────────────────────────────────
+
 class HelpCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @bridge.bridge_command(name="rpg_help", description="📡 查看所有可用指令")
+    @bridge.bridge_command(name="guide", description="🌅 新手入門須知（基礎指令）")
+    async def guide(self, ctx: discord.ApplicationContext) -> None:
+        await ctx.respond(embed=_guide_embed(), ephemeral=True)
+
+    @bridge.bridge_command(name="rpg_help", description="📡 完整指令手冊")
     async def rpg_help(self, ctx: discord.ApplicationContext) -> None:
-        await ctx.respond(embed=_help_embed(), ephemeral=True)
+        await ctx.respond(embed=_full_help_embed(), ephemeral=True)
 
 
 def setup(bot: discord.Bot) -> None:
