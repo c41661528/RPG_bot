@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from config import MATERIAL_PRICES
@@ -110,7 +110,7 @@ class GearShopCog(commands.Cog):
 
     # ── /gear_shop ───────────────────────────────────────────────
 
-    @discord.slash_command(name="gear_shop", description="🔧 查看黑市裝備行（等級縮放隨機裝備）")
+    @bridge.bridge_command(name="gear_shop", description="🔧 查看黑市裝備行（等級縮放隨機裝備）")
     async def gear_shop(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -137,7 +137,7 @@ class GearShopCog(commands.Cog):
 
     # ── /buy_gear ────────────────────────────────────────────────
 
-    @discord.slash_command(name="buy_gear", description="🛒 購買裝備行中的裝備")
+    @bridge.bridge_command(name="buy_gear", description="🛒 購買裝備行中的裝備")
     async def buy_gear(
         self,
         ctx: discord.ApplicationContext,
@@ -206,7 +206,7 @@ class GearShopCog(commands.Cog):
 
     # ── /mat_shop ────────────────────────────────────────────────
 
-    @discord.slash_command(name="mat_shop", description="🔩 查看強化材料行")
+    @bridge.bridge_command(name="mat_shop", description="🔩 查看強化材料行")
     async def mat_shop(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -221,7 +221,7 @@ class GearShopCog(commands.Cog):
 
     # ── /buy_material ────────────────────────────────────────────
 
-    @discord.slash_command(name="buy_material", description="🔩 購買強化材料")
+    @bridge.bridge_command(name="buy_material", description="🔩 購買強化材料")
     async def buy_material(
         self,
         ctx: discord.ApplicationContext,

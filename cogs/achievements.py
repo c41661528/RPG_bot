@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from database.session import AsyncSessionFactory
@@ -61,7 +61,7 @@ class AchievementsCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="achievements", description="🏆 查看所有成就進度")
+    @bridge.bridge_command(name="achievements", description="🏆 查看所有成就進度")
     async def achievements(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(

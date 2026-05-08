@@ -140,7 +140,13 @@ def character_profile_embed(character: Character) -> discord.Embed:
     embed.add_field(name="🎒 背包",  value=f"{len(character.inventory or [])} / 20", inline=True)
     embed.add_field(name="🩹 急救包", value=str(character.medkits), inline=True)
 
-    embed.set_footer(text=f"📍 {character.current_location}")
+    embed.add_field(
+        name="⚡ 快速指令",
+        value="`/fight` 戰鬥　`/explore` 探索　`/inventory` 背包　`/shop` 商店　`/rpg_help` 全部指令",
+        inline=False,
+    )
+
+    embed.set_footer(text=f"📍 {character.current_location}　·　指令前綴可用 / 或 !")
     return embed
 
 

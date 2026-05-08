@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from config import DISCORD_TOKEN
 from database.session import init_db
@@ -30,7 +30,8 @@ COGS = [
 ]
 
 intents = discord.Intents.default()
-bot = discord.Bot(intents=intents)
+intents.message_content = True
+bot = bridge.Bot(command_prefix="!", intents=intents, help_command=None)
 
 
 @bot.event

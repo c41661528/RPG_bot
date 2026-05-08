@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select, func, desc
 
 from config import (
@@ -205,7 +205,7 @@ class ProgressionCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="rank", description="🏆 查看廢土排行榜")
+    @bridge.bridge_command(name="rank", description="🏆 查看廢土排行榜")
     async def rank(
         self,
         ctx: discord.ApplicationContext,
@@ -229,7 +229,7 @@ class ProgressionCog(commands.Cog):
 
         await ctx.respond(embed=_rank_embed(top, sort_by, my_rank, me_full))
 
-    @discord.slash_command(name="rebirth", description="✨ 轉生重置（需 Lv.50，最多 5 次）")
+    @bridge.bridge_command(name="rebirth", description="✨ 轉生重置（需 Lv.50，最多 5 次）")
     async def rebirth(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(

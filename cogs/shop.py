@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from config import SHOP_ITEMS, SHOP_ITEMS_BY_NAME
@@ -51,7 +51,7 @@ class ShopCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="shop", description="🏪 查看黑市商店")
+    @bridge.bridge_command(name="shop", description="🏪 查看黑市商店")
     async def shop(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -66,7 +66,7 @@ class ShopCog(commands.Cog):
 
         await ctx.respond(embed=_shop_embed(char), ephemeral=True)
 
-    @discord.slash_command(name="buy", description="🛒 購買道具")
+    @bridge.bridge_command(name="buy", description="🛒 購買道具")
     async def buy(
         self,
         ctx: discord.ApplicationContext,

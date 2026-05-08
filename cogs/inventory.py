@@ -1,7 +1,7 @@
 from collections import Counter
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from config import ENHANCE_BONUS_PER_LV
@@ -210,7 +210,7 @@ class InventoryCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="inventory", description="🎒 查看背包與裝備欄位")
+    @bridge.bridge_command(name="inventory", description="🎒 查看背包與裝備欄位")
     async def inventory(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -225,7 +225,7 @@ class InventoryCog(commands.Cog):
 
         await ctx.respond(embed=_inventory_embed(char), view=InventoryView(char), ephemeral=True)
 
-    @discord.slash_command(name="unequip", description="🔓 卸下當前裝備的物品")
+    @bridge.bridge_command(name="unequip", description="🔓 卸下當前裝備的物品")
     async def unequip(
         self,
         ctx: discord.ApplicationContext,
@@ -266,7 +266,7 @@ class InventoryCog(commands.Cog):
         name = f"{item['emoji']} **{item['name']}**" if item else item_id
         await ctx.respond(embed=success_embed(f"卸下 {name}。{msg}"), ephemeral=True)
 
-    @discord.slash_command(name="sell", description="💰 出售背包中的裝備換取信用點")
+    @bridge.bridge_command(name="sell", description="💰 出售背包中的裝備換取信用點")
     async def sell(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -291,7 +291,12 @@ class InventoryCog(commands.Cog):
 
 # ── Sell helpers ─────────────────────────────────────────────────
 
-def _sell_embed(char: Character, selected_id: str = "", price: int = 0) -> discord.Embed:
+def _sell_embed(
+    char: Character,
+    selected_id: str = "",
+    price: int = 0,
+    sold_msg: str = "",
+) -> discord.Embed:
     ci  = char.custom_items or {}
     inv = list(char.inventory or [])
     enh = char.item_enhancements or {}
@@ -322,8 +327,9 @@ def _sell_embed(char: Character, selected_id: str = "", price: int = 0) -> disco
             lv_txt  = f" `+{lv}`" if lv > 0 else ""
             tier_e  = RARITY_EMOJI.get(item.get("tier", 1), "⚪")
             lines.append(f"{tier_e} {item['emoji']} **{item['name']}**{lv_txt}　→ **{val:,}** 💰")
-        desc  = "\n".join(lines) if lines else "`背包是空的`"
-        color = C_INFO
+        body  = "\n".join(lines) if lines else "`背包是空的`"
+        desc  = f"{sold_msg}\n\n{body}" if sold_msg else body
+        color = 0x2ECC71 if sold_msg else C_INFO
 
     embed = discord.Embed(
         title="🏪  黑市回收站",
@@ -448,20 +454,13 @@ class _ConfirmSellView(discord.ui.View):
             await session.commit()
             await session.refresh(char)
 
-        item    = get_item(self.item_id, char.custom_items or {})
-        name    = f"{item['emoji']} **{item['name']}**" if item else self.item_id
-        for child in self.children:
-            child.disabled = True
+        item     = get_item(self.item_id, char.custom_items or {})
+        name     = f"{item['emoji']} **{item['name']}**" if item else self.item_id
+        sold_msg = f"✅ 出售 {name}，獲得 **+{self.price:,}** 💰"
 
         await interaction.response.edit_message(
-            embed=_sell_embed(char),
+            embed=_sell_embed(char, sold_msg=sold_msg),
             view=SellSelectView(char, self.discord_user_id) if char.inventory else None,
-        )
-        await interaction.followup.send(
-            embed=success_embed(
-                f"出售 {name}，獲得 **{self.price:,}** 💰\n現有信用點：**{char.credits:,}**"
-            ),
-            ephemeral=True,
         )
 
     @discord.ui.button(label="取消", emoji="❌", style=discord.ButtonStyle.secondary)

@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 
 from database.session import AsyncSessionFactory
@@ -56,7 +56,7 @@ class ExplorationCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="explore", description="🔍 在當前地點探索，尋找物資或危機")
+    @bridge.bridge_command(name="explore", description="🔍 在當前地點探索，尋找物資或危機")
     async def explore(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
@@ -126,7 +126,7 @@ class ExplorationCog(commands.Cog):
         embed = _explore_embed(char, location, event, extra, drop_name, color)
         await ctx.respond(embed=embed)
 
-    @discord.slash_command(name="travel", description="🗺️ 前往其他地點")
+    @bridge.bridge_command(name="travel", description="🗺️ 前往其他地點")
     async def travel(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(

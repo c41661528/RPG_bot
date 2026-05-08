@@ -10,7 +10,7 @@ import random
 from pathlib import Path
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -266,7 +266,7 @@ class DungeonCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
 
-    @discord.slash_command(name="dungeon", description="🗺️ 挑戰迷宮（5層+Boss）")
+    @bridge.bridge_command(name="dungeon", description="🗺️ 挑戰迷宮（5層+Boss）")
     async def dungeon(self, ctx: discord.ApplicationContext) -> None:
         async with AsyncSessionFactory() as session:
             result = await session.execute(
