@@ -61,10 +61,10 @@ def _guide_embed() -> discord.Embed:
     )
 
     embed.add_field(
-        name="⚠️  Discord 小坑",
+        name="⏳  戰鬥冷卻",
         value=(
-            "**連續執行同一指令（例如連打三次 `/fight`）有時會卡住沒反應。**\n"
-            "中間穿插任意其他指令（例如 `/profile`）即可正常繼續，這是 Discord 的限制不是 bot 故障。"
+            "戰鬥結束後有 **10 秒義體冷卻**才能再次 `/fight`。\n"
+            "這段時間正好可以查看 `/profile`、`/inventory`，或先去 `/quest` 領獎勵。"
         ),
         inline=False,
     )
@@ -148,7 +148,7 @@ def _full_help_embed() -> discord.Embed:
             "• 武器+ATK　護甲/頭盔+DEF　配件+能量/暴擊\n"
             "• 強化跟著「那件裝備」走，賣了會清掉\n"
             "• 稱號可在 `titles` 切換，部分提供 ATK/DEF/信用點%等加成\n"
-            "• **連打同一指令（例如 `/fight`）卡住時**：穿插其他指令再繼續即可，這是 Discord 的限制"
+            "• 戰鬥結束後有 **10 秒義體冷卻**才能再開戰"
         ),
         inline=False,
     )

@@ -88,7 +88,7 @@ class _UpgradeSelect(discord.ui.Select):
             ok, new_stats, msg = perform_upgrade(char, slot, tier)
             new_titles: list[str] = []
             if ok:
-                new_titles = check_title_unlocks(char)
+                new_titles = check_title_unlocks(char, discord_id=view.discord_user_id)
             await session.commit()
             await session.refresh(char)
 
@@ -179,7 +179,7 @@ class _ReforgeSelect(discord.ui.Select):
             ok, new_stats, old, msg = perform_reforge(char, iid)
             new_titles: list[str] = []
             if ok:
-                new_titles = check_title_unlocks(char)
+                new_titles = check_title_unlocks(char, discord_id=view.discord_user_id)
             await session.commit()
             await session.refresh(char)
 

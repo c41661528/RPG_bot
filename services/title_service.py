@@ -15,7 +15,22 @@ if TYPE_CHECKING:
     from models.character import Character
 
 
+# Discord ID of the bot creator — gets the exclusive 創世者-宅宅 title.
+CREATOR_DISCORD_ID = 1325263341937229906
+
+
 _TITLES: list[dict] = [
+    # ── Creator (exclusive) ──────────────────────────────────────
+    {
+        "id": "creator_t", "name": "創世者-宅宅", "emoji": "🌌",
+        "desc": "廢土的創世者本人，全屬性 +10%、暴擊 +5%、信用點/EXP +10%。",
+        "rarity": 4,
+        "bonuses": {
+            "atk_pct": 0.10, "def_pct": 0.10, "hp_pct": 0.10,
+            "crit_bonus": 0.05, "credits_pct": 0.10, "exp_pct": 0.10,
+        },
+        "unlock": lambda c: bool((c.unlocked_titles or {}).get("__creator__")),
+    },
     # ── Default ──────────────────────────────────────────────────
     {
         "id": "wasteland_rookie", "name": "新手廢土客", "emoji": "🌅",
@@ -156,12 +171,22 @@ def is_unlocked(char: Character, title_id: str) -> bool:
         return False
 
 
-def check_title_unlocks(char: Character) -> list[str]:
+def check_title_unlocks(char: Character, discord_id: int | None = None) -> list[str]:
     """Evaluate every title; persist newly earned ones. Returns names list.
 
-    Call inside an open DB session, then commit afterward.
+    Pass `discord_id` (the player's Discord ID) so creator-exclusive titles
+    can be granted. Call inside an open DB session, then commit afterward.
     """
     unlocked = dict(char.unlocked_titles or {})
+    changed  = False
+
+    # Mark the internal creator flag so the creator_t lambda evaluates True.
+    if discord_id == CREATOR_DISCORD_ID and not unlocked.get("__creator__"):
+        unlocked["__creator__"] = True
+        char.unlocked_titles    = unlocked
+        flag_modified(char, "unlocked_titles")
+        changed = True
+
     newly: list[str] = []
     for t in _TITLES:
         if unlocked.get(t["id"]):
@@ -173,7 +198,9 @@ def check_title_unlocks(char: Character) -> list[str]:
         if earned:
             unlocked[t["id"]] = True
             newly.append(t["name"])
-    if newly:
+            changed = True
+
+    if changed:
         char.unlocked_titles = unlocked
         flag_modified(char, "unlocked_titles")
     return newly

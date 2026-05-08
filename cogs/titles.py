@@ -153,7 +153,7 @@ class TitlesCog(commands.Cog):
                 return await ctx.respond(
                     embed=error_embed("尚未建立角色。使用 `/start`。"), ephemeral=True,
                 )
-            new_unlocks = check_title_unlocks(char)
+            new_unlocks = check_title_unlocks(char, discord_id=ctx.author.id)
             await session.commit()
             await session.refresh(char)
 

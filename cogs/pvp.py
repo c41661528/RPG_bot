@@ -137,8 +137,11 @@ class _DuelView(discord.ui.View):
 
             record_duel(winner_char, won=True)
             record_duel(loser_char,  won=False)
-            new_titles_w = check_title_unlocks(winner_char)
-            check_title_unlocks(loser_char)
+            # Pass discord IDs so creator-exclusive title can be granted.
+            winner_uid = self.challenger_user_id if winner_char is ch else self.target_user_id
+            loser_uid  = self.target_user_id     if winner_char is ch else self.challenger_user_id
+            new_titles_w = check_title_unlocks(winner_char, discord_id=winner_uid)
+            check_title_unlocks(loser_char, discord_id=loser_uid)
 
             await session.commit()
 

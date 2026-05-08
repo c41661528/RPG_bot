@@ -188,6 +188,8 @@ class CharacterCog(commands.Cog):
 
     @bridge.bridge_command(name="profile", description="📋 查看你的角色狀態面板")
     async def profile(self, ctx: discord.ApplicationContext) -> None:
+        from services.title_service import check_title_unlocks
+
         async with AsyncSessionFactory() as session:
             result = await session.execute(
                 select(Character)
@@ -196,9 +198,14 @@ class CharacterCog(commands.Cog):
             )
             character = result.scalar_one_or_none()
 
-        if character is None:
-            embed = error_embed("尚未建立角色。\n使用 `/start` 連線至廢土網路。")
-            return await ctx.respond(embed=embed, ephemeral=True)
+            if character is None:
+                embed = error_embed("尚未建立角色。\n使用 `/start` 連線至廢土網路。")
+                return await ctx.respond(embed=embed, ephemeral=True)
+
+            # Check title unlocks (incl. creator-exclusive) on every profile open
+            check_title_unlocks(character, discord_id=ctx.author.id)
+            await session.commit()
+            await session.refresh(character)
 
         await ctx.respond(embed=character_profile_embed(character))
 

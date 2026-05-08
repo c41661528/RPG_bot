@@ -1,5 +1,6 @@
 import json
 import random
+import time
 from pathlib import Path
 
 import discord
@@ -45,7 +46,8 @@ from services.quest_service import update_quest_progress, update_weekly_quest_pr
 from ui.combat_view import CombatView
 from utils.embeds import combat_embed, end_combat_embed, error_embed
 
-_INVENTORY_LIMIT = 20
+_INVENTORY_LIMIT      = 20
+FIGHT_COOLDOWN_SEC    = 10   # post-combat cooldown before next /fight
 
 
 def _load_enemies() -> list[dict]:
@@ -98,7 +100,9 @@ def _pick_enemy(player_level: int) -> dict:
 class CombatCog(commands.Cog):
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
-        self.active_combats: dict[int, CombatState] = {}
+        self.active_combats:  dict[int, CombatState] = {}
+        # char_id → unix ts when next /fight is allowed
+        self.fight_cooldowns: dict[int, float]       = {}
 
     # ── Commands ─────────────────────────────────────────────────
 
@@ -119,6 +123,16 @@ class CombatCog(commands.Cog):
         if char.hp_current <= 0:
             return await ctx.respond(
                 embed=error_embed("HP 歸零，無法戰鬥。使用 `/rest` 恢復體力。"), ephemeral=True
+            )
+
+        # ── Post-combat cooldown ─────────────────────────────────
+        until = self.fight_cooldowns.get(char.id, 0.0)
+        now   = time.time()
+        if now < until:
+            remaining = int(until - now) + 1
+            return await ctx.respond(
+                embed=error_embed(f"⏳ 義體冷卻中，再 **{remaining}** 秒可重新戰鬥。"),
+                ephemeral=True,
             )
 
         enemy = _pick_enemy(char.level)
@@ -449,6 +463,7 @@ class CombatCog(commands.Cog):
         state = self.active_combats.pop(character_id, None)
         if not state:
             return
+        self.fight_cooldowns[character_id] = time.time() + FIGHT_COOLDOWN_SEC
         async with AsyncSessionFactory() as session:
             result = await session.execute(select(Character).where(Character.id == character_id))
             char = result.scalar_one_or_none()
@@ -544,6 +559,7 @@ class CombatCog(commands.Cog):
             await session.commit()
 
         self.active_combats.pop(state.character_id, None)
+        self.fight_cooldowns[state.character_id] = time.time() + FIGHT_COOLDOWN_SEC
         embed = end_combat_embed(
             state, outcome, exp_gain, credits_gain, leveled_up, new_level,
             drop, mat_drop, new_achievements
