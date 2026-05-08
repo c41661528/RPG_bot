@@ -13,15 +13,17 @@ if TYPE_CHECKING:
 
 # (action_suffix, label, emoji, description, tier)
 _ITEM_DEFS = [
-    ("medkit",        "急救包",     "🩹", "回復 35% HP",        1),
-    ("large_medkit",  "大型急救包", "🚑", "回復 70% HP",        3),
-    ("energy",        "能量電池",   "🔋", "回復能量",           1),
-    ("stimulant",     "興奮劑",     "💉", "少量回 HP+能量",     2),
-    ("nano_repair",   "奈米修復劑", "🧬", "持續回 HP",          3),
-    ("adrenaline",    "腎上腺素",   "💊", "暫時提升攻擊力",     2),
-    ("shield_chip",   "護盾晶片",   "🔰", "獲得格擋與反擊",     3),
-    ("corrosive_vial","腐蝕瓶",     "🧪", "對敵人持續中毒",     2),
-    ("emp_grenade",   "EMP手雷",    "⚡", "癱瘓敵人 1 回合",    4),
+    ("medkit",          "急救包",       "🩹", "回復 35% HP",       1),
+    ("tactical_medkit", "戰術急救包",   "⚕️", "回復 50% HP",       2),
+    ("large_medkit",    "大型急救包",   "🚑", "回復 70% HP",       3),
+    ("neuro_kit",       "神經修復套組", "🌟", "完全回滿 HP",       4),
+    ("energy",          "能量電池",     "🔋", "回復能量",          1),
+    ("stimulant",       "興奮劑",       "💉", "少量回 HP+能量",    2),
+    ("nano_repair",     "奈米修復劑",   "🧬", "持續回 HP",         3),
+    ("adrenaline",      "腎上腺素",     "💊", "暫時提升攻擊力",    2),
+    ("shield_chip",     "護盾晶片",     "🔰", "獲得格擋與反擊",    3),
+    ("corrosive_vial",  "腐蝕瓶",       "🧪", "對敵人持續中毒",    2),
+    ("emp_grenade",     "EMP手雷",      "⚡", "癱瘓敵人 1 回合",   4),
 ]
 
 _TIER_E = {1: "⚪", 2: "🟢", 3: "🔵", 4: "🟣"}

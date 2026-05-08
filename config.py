@@ -120,12 +120,16 @@ REBIRTH_REQUIRED_LEVEL   = 50   # must be max level
 REBIRTH_STAT_BONUS       = 2    # +2 to ALL base stats per rebirth
 
 # ── Shop prices ─────────────────────────────────────────────────
-MEDKIT_COST           = 150   # credits
-ENERGY_CELL_COST      = 100   # credits
-MEDKIT_HEAL_PCT       = 0.35  # heals 35 % of max HP
-LARGE_MEDKIT_COST     = 400   # credits
-LARGE_MEDKIT_HEAL_PCT = 0.70  # heals 70 % of max HP — for higher-level players
-ENERGY_CELL_RESTORE   = 40    # restores 40 energy
+MEDKIT_COST              = 150   # T1 — credits
+MEDKIT_HEAL_PCT          = 0.35  # T1 — heals 35 % of max HP
+TACTICAL_MEDKIT_COST     = 280   # T2
+TACTICAL_MEDKIT_HEAL_PCT = 0.50  # T2 — 50 % heal
+LARGE_MEDKIT_COST        = 400   # T3
+LARGE_MEDKIT_HEAL_PCT    = 0.70  # T3 — 70 % heal
+NEURO_KIT_COST           = 1200  # T4
+NEURO_KIT_HEAL_PCT       = 1.00  # T4 — full heal
+ENERGY_CELL_COST         = 100   # credits
+ENERGY_CELL_RESTORE      = 40    # restores 40 energy
 
 SHIELD_CHIP_COST     = 300
 ADRENALINE_COST      = 200
@@ -157,9 +161,19 @@ SHOP_ITEMS: list[dict] = [
         "desc": f"恢復 {int(MEDKIT_HEAL_PCT * 100)}% 最大 HP",
     },
     {
+        "id": "tactical_medkit", "name": "戰術急救包", "emoji": "⚕️", "tier": 2,
+        "cost": TACTICAL_MEDKIT_COST, "category": "recovery",
+        "desc": f"恢復 {int(TACTICAL_MEDKIT_HEAL_PCT * 100)}% 最大 HP",
+    },
+    {
         "id": "large_medkit", "name": "大型急救包", "emoji": "🚑", "tier": 3,
         "cost": LARGE_MEDKIT_COST, "category": "recovery",
         "desc": f"恢復 {int(LARGE_MEDKIT_HEAL_PCT * 100)}% 最大 HP（適合高等玩家）",
+    },
+    {
+        "id": "neuro_kit", "name": "神經修復套組", "emoji": "🌟", "tier": 4,
+        "cost": NEURO_KIT_COST, "category": "recovery",
+        "desc": f"完全恢復 HP（{int(NEURO_KIT_HEAL_PCT * 100)}%），頂級義體用品",
     },
     {
         "id": "energy_cell", "name": "能量電池", "emoji": "🔋", "tier": 1,

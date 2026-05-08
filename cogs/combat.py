@@ -21,6 +21,8 @@ from config import (
     LARGE_MEDKIT_HEAL_PCT,
     MAX_LEVEL,
     MEDKIT_HEAL_PCT,
+    NEURO_KIT_HEAL_PCT,
+    TACTICAL_MEDKIT_HEAL_PCT,
     NANO_REPAIR_PCT,
     NANO_REPAIR_TURNS,
     STAT_POINTS_PER_LEVEL,
@@ -299,6 +301,20 @@ class CombatCog(commands.Cog):
             logs.append(f"🩹 使用急救包，恢復 **{heal}** HP！（剩餘 {state.medkits} 個）")
             state.combo = 0
 
+        elif action == "item_tactical_medkit":
+            count = state.consumables_in_combat.get("tactical_medkit", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有戰術急救包！", ephemeral=True)
+            heal = max(1, int(state.hp_max * TACTICAL_MEDKIT_HEAL_PCT))
+            state.hp = min(state.hp_max, state.hp + heal)
+            state.consumables_in_combat["tactical_medkit"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"⚕️ 使用戰術急救包，恢復 **{heal}** HP！"
+                f"（剩餘 {state.consumables_in_combat['tactical_medkit']} 個）"
+            )
+            state.combo = 0
+
         elif action == "item_large_medkit":
             count = state.consumables_in_combat.get("large_medkit", 0)
             if count <= 0:
@@ -310,6 +326,20 @@ class CombatCog(commands.Cog):
             logs.append(
                 f"🚑 使用大型急救包，恢復 **{heal}** HP！"
                 f"（剩餘 {state.consumables_in_combat['large_medkit']} 個）"
+            )
+            state.combo = 0
+
+        elif action == "item_neuro_kit":
+            count = state.consumables_in_combat.get("neuro_kit", 0)
+            if count <= 0:
+                return await interaction.response.send_message("沒有神經修復套組！", ephemeral=True)
+            heal = state.hp_max - state.hp   # full restore
+            state.hp = state.hp_max
+            state.consumables_in_combat["neuro_kit"] -= 1
+            state.items_used_in_fight += 1
+            logs.append(
+                f"🌟 使用神經修復套組，**HP 完全恢復**（+{heal}）！"
+                f"（剩餘 {state.consumables_in_combat['neuro_kit']} 個）"
             )
             state.combo = 0
 
