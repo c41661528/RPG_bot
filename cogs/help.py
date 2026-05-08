@@ -60,6 +60,15 @@ def _guide_embed() -> discord.Embed:
         inline=False,
     )
 
+    embed.add_field(
+        name="⚠️  Discord 小坑",
+        value=(
+            "**連續執行同一指令（例如連打三次 `/fight`）有時會卡住沒反應。**\n"
+            "中間穿插任意其他指令（例如 `/profile`）即可正常繼續，這是 Discord 的限制不是 bot 故障。"
+        ),
+        inline=False,
+    )
+
     embed.set_footer(text="先 /start 建角色 → /fight 開打 → /inventory 裝備 → /rest 回血")
     return embed
 
@@ -138,7 +147,8 @@ def _full_help_embed() -> discord.Embed:
             "• 戰鬥中：⚔️攻擊　🛡️防禦　🏃逃跑　💠技能選單　🎒道具選單\n"
             "• 武器+ATK　護甲/頭盔+DEF　配件+能量/暴擊\n"
             "• 強化跟著「那件裝備」走，賣了會清掉\n"
-            "• 稱號可在 `titles` 切換，部分提供 ATK/DEF/信用點%等加成"
+            "• 稱號可在 `titles` 切換，部分提供 ATK/DEF/信用點%等加成\n"
+            "• **連打同一指令（例如 `/fight`）卡住時**：穿插其他指令再繼續即可，這是 Discord 的限制"
         ),
         inline=False,
     )
