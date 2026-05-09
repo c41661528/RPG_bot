@@ -34,7 +34,13 @@ COGS = [
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = bridge.Bot(command_prefix="!", intents=intents, help_command=None)
+bot = bridge.Bot(
+    command_prefix="!",
+    intents=intents,
+    help_command=None,
+    # When replying to a `!` prefix command, don't ping the author.
+    allowed_mentions=discord.AllowedMentions(replied_user=False),
+)
 
 
 @bot.event
