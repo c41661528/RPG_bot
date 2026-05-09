@@ -30,6 +30,7 @@ COGS = [
     "cogs.titles",
     "cogs.craft",
     "cogs.pvp",
+    "cogs.party",
 ]
 
 intents = discord.Intents.default()

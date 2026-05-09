@@ -133,6 +133,17 @@ def _full_help_embed() -> discord.Embed:
     )
 
     embed.add_field(
+        name="🎯  隊伍",
+        value=(
+            "`party_form` 建立隊伍（你是隊長）\n"
+            "`party_invite @玩家` 邀請朋友（最多 4 人）\n"
+            "`party_status` 查看隊伍狀態　`party_leave` 離開\n"
+            "面板按 [出發迷宮] 進隊伍迷宮（敵人HP×N、獎勵每人×1.5）"
+        ),
+        inline=False,
+    )
+
+    embed.add_field(
         name="📈  成長",
         value=(
             "`allocate` 配屬性點　`rank` 排行榜\n"

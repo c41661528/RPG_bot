@@ -505,6 +505,241 @@ class DungeonCog(commands.Cog):
             except Exception:
                 await interaction.followup.send(embed=embed, ephemeral=True)
 
+    # ── Party dungeon ────────────────────────────────────────────
+
+    async def start_party_dungeon(
+        self, interaction: discord.Interaction, party,
+    ) -> None:
+        """Show dungeon select for the party. Called from cogs.party panel."""
+        avg_lv = party.avg_level()
+        lines: list[str] = []
+        for d in _DUNGEONS:
+            locked = avg_lv < d["min_level"]
+            tag    = "🔒 平均等級不足" if locked else d["desc"]
+            lines.append(f"{d['emoji']} **{d['name']}**  Lv.{d['min_level']}+\n> {tag}")
+
+        embed = discord.Embed(
+            title=f"🗺️  隊伍迷宮  ({party.size} 人)",
+            description=(
+                "\n\n".join(lines)
+                + f"\n\n敵人 HP ×**{party.hp_scale_factor():.1f}**　│　獎勵每人 ×**1.5**"
+            ),
+            color=C_INFO,
+        )
+        embed.set_footer(text="只有隊長能選擇  ·  全 5 層自動戰鬥  ·  結束自動解散隊伍")
+        await interaction.response.send_message(
+            embed=embed, view=_PartyDungeonSelectView(self, party),
+        )
+
+    async def run_party_dungeon(
+        self, interaction: discord.Interaction, party, dungeon_id: str,
+    ) -> None:
+        """Auto-resolve all 5 floors with the party's combined stats."""
+        from services.title_service import check_title_unlocks, title_bonuses
+
+        dungeon = _DUNGEON_MAP.get(dungeon_id)
+        if not dungeon:
+            return await interaction.response.send_message("迷宮不存在。", ephemeral=True)
+
+        avg_lv = party.avg_level()
+        if avg_lv < dungeon["min_level"]:
+            return await interaction.response.send_message(
+                embed=error_embed(f"隊伍平均等級不足（需 Lv.{dungeon['min_level']}）。"),
+                ephemeral=True,
+            )
+
+        # ── Snapshot every member's combat stats ────────────────
+        member_chars: list[Character] = []
+        async with AsyncSessionFactory() as session:
+            for m in party.members.values():
+                res = await session.execute(
+                    select(Character).where(Character.id == m.character_id)
+                )
+                c = res.scalar_one_or_none()
+                if c is not None:
+                    member_chars.append(c)
+
+        if not member_chars:
+            return await interaction.response.send_message(
+                embed=error_embed("無法載入隊伍成員資料。"), ephemeral=True,
+            )
+
+        hp_sum     = sum(c.hp_current for c in member_chars)
+        hp_max_sum = sum(c.hp_max     for c in member_chars)
+
+        atk_total = 0
+        def_total = 0
+        for c in member_chars:
+            atk_b, def_b, _hp_b, _en_b, _crit_b = equipped_bonuses(
+                c.equipped_weapon, c.equipped_armor,
+                c.item_enhancements,
+                c.equipped_helmet, c.equipped_accessory,
+                c.custom_items,
+            )
+            base_atk, base_def = derive_player_stats(
+                c.class_type, c.stat_vitality, c.stat_reflex, c.stat_tech, c.level,
+            )
+            tb = title_bonuses(c)
+            atk_total += int((base_atk + atk_b) * (1.0 + tb.get("atk_pct", 0.0)))
+            def_total += int((base_def + def_b) * (1.0 + tb.get("def_pct", 0.0)))
+        def_avg = max(1, def_total // len(member_chars))
+
+        hp_scale = party.hp_scale_factor()
+
+        # ── Auto-fight all 5 floors ─────────────────────────────
+        floor_logs: list[str] = []
+        party_hp        = hp_sum
+        total_exp_base  = 0
+        total_cred_base = 0
+        floors_cleared  = 0
+
+        for floor_idx in range(5):
+            enemy = _build_floor_enemy(dungeon, floor_idx, avg_lv)
+            enemy["hp"] = max(1, int(enemy["hp"] * hp_scale))
+
+            party_hp_after, won, turns, _ = _auto_fight_floor(
+                party_hp, hp_max_sum, atk_total, def_avg, enemy,
+            )
+            floor_no = floor_idx + 1
+            tag      = "✅ 通過" if won else "💀 失敗"
+            floor_logs.append(
+                f"第 {floor_no} 層 {enemy['emoji']} **{enemy['name']}**: "
+                f"{tag}（{turns} 回合，剩餘 HP {party_hp_after}/{hp_max_sum}）"
+            )
+
+            if not won:
+                party_hp = 0
+                break
+
+            floors_cleared += 1
+            party_hp        = party_hp_after
+            total_exp_base += int(enemy["hp"] // 2 * enemy["exp_mult"] / hp_scale)
+            total_cred_base += int(
+                random.randint(avg_lv * 10, avg_lv * 25) * enemy["credits_mult"]
+            )
+
+        cleared = floors_cleared == 5
+        if cleared:
+            total_exp_base  += dungeon["clear_bonus_exp"]
+            total_cred_base += dungeon["clear_bonus_credits"]
+
+        # 1.5× per-person reward (each member gets the full enhanced amount)
+        per_exp  = int(total_exp_base * 1.5)
+        per_cred = int(total_cred_base * 1.5)
+        hp_loss  = max(0, hp_sum - party_hp)
+
+        # ── Apply rewards & HP loss to every member ──────────────
+        leveled_summary: list[str] = []
+        async with AsyncSessionFactory() as session:
+            for m in party.members.values():
+                res = await session.execute(
+                    select(Character).where(Character.id == m.character_id)
+                )
+                c = res.scalar_one_or_none()
+                if c is None:
+                    continue
+
+                # Distribute HP loss proportional to max HP
+                if hp_max_sum > 0:
+                    share = int(hp_loss * (c.hp_max / hp_max_sum))
+                    c.hp_current = max(1, c.hp_current - share)
+
+                c.exp     += per_exp
+                c.credits += per_cred
+
+                leveled = False
+                while c.exp >= exp_for_next_level(c.level) and c.level < MAX_LEVEL:
+                    c.exp -= exp_for_next_level(c.level)
+                    c.level += 1
+                    c.stat_points_avail += STAT_POINTS_PER_LEVEL
+                    c.hp_max     += 10
+                    c.energy_max += 5
+                    c.hp_current  = c.hp_max
+                    leveled       = True
+                if leveled:
+                    leveled_summary.append(f"{c.name} → Lv.{c.level}")
+
+                if cleared:
+                    mat_drop = try_drop_material(c.level)
+                    if mat_drop:
+                        mats = dict(c.materials or {})
+                        mats[mat_drop["id"]] = mats.get(mat_drop["id"], 0) + 1
+                        c.materials = mats
+                        flag_modified(c, "materials")
+
+                update_quest_progress(c, "kill_enemies", floors_cleared)
+                update_weekly_quest_progress(c, "kill_enemies", floors_cleared)
+                update_quest_progress(c, "earn_credits", per_cred)
+                update_weekly_quest_progress(c, "earn_credits", per_cred)
+
+                check_achievements(c)
+                check_title_unlocks(c, discord_id=m.discord_user_id)
+
+            await session.commit()
+
+        # ── Result embed ────────────────────────────────────────
+        title  = f"🏆  隊伍通關 — {dungeon['emoji']} {dungeon['name']}" if cleared \
+                 else f"💀  隊伍迷宮失敗 — {dungeon['emoji']} {dungeon['name']}"
+        color  = C_PRIMARY if cleared else C_DANGER
+        desc_lines = [
+            f"通過樓層：**{floors_cleared}/5**",
+            "",
+            "─────────── 戰鬥紀錄 ───────────",
+        ] + [f"> {l}" for l in floor_logs] + [
+            "",
+            f"📦 每人獲得：**{per_exp}** EXP　│　**{per_cred:,}** 💰",
+        ]
+        if leveled_summary:
+            desc_lines.append(f"🎉 升級：" + "、".join(leveled_summary))
+
+        embed = discord.Embed(
+            title=title,
+            description="\n".join(desc_lines),
+            color=color,
+        )
+        embed.set_footer(text=f"參戰：{ '、'.join(m.name for m in party.members.values()) }")
+
+        # ── Auto-disband party ──────────────────────────────────
+        party_cog = self.bot.get_cog("PartyCog")
+        if party_cog is not None:
+            party_cog.disband(party.leader_id)
+
+        try:
+            await interaction.response.edit_message(embed=embed, view=None)
+        except Exception:
+            await interaction.followup.send(embed=embed)
+
+
+# ── Party-only views (defined after DungeonCog so methods are available) ──
+
+class _PartyDungeonSelect(discord.ui.Select):
+    def __init__(self, cog: DungeonCog, party) -> None:
+        self.cog   = cog
+        self.party = party
+        avg_lv     = party.avg_level()
+
+        opts: list[discord.SelectOption] = []
+        for d in _DUNGEONS:
+            locked = avg_lv < d["min_level"]
+            opts.append(discord.SelectOption(
+                label=f"{d['name']}  Lv.{d['min_level']}+",
+                value=d["id"],
+                emoji=d["emoji"],
+                description=("🔒 平均等級不足" if locked else d["desc"][:50]),
+            ))
+        super().__init__(placeholder="選擇隊伍迷宮…", options=opts, min_values=1, max_values=1)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        if interaction.user.id != self.party.leader_id:
+            return await interaction.response.send_message("只有隊長能選擇。", ephemeral=True)
+        await self.cog.run_party_dungeon(interaction, self.party, self.values[0])
+
+
+class _PartyDungeonSelectView(discord.ui.View):
+    def __init__(self, cog: DungeonCog, party) -> None:
+        super().__init__(timeout=120)
+        self.add_item(_PartyDungeonSelect(cog, party))
+
 
 def setup(bot: discord.Bot) -> None:
     bot.add_cog(DungeonCog(bot))
